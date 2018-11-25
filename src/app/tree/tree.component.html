@@ -1,0 +1,29 @@
+<mat-toolbar color="primary">
+  <input id="filter" #filter (keyup)="tree.treeModel.filterNodes(filter.value)" placeholder="filter nodes" />
+  <button mat-icon-button (click)="tree.treeModel.clearFilter()">
+    <mat-icon>clear</mat-icon>
+  </button>
+</mat-toolbar>
+<mat-toolbar *ngIf="change" color="warn">
+  <button mat-icon-button (click)="save(tree.treeModel)">
+    <mat-icon>save</mat-icon>
+  </button>
+  <button mat-icon-button (click)="undo()">
+    <mat-icon>undo</mat-icon>
+  </button>
+</mat-toolbar>
+<tree-root #tree [focused]="true" [nodes]="nodes" [options]="options">
+</tree-root>
+
+<div class="menu" *ngIf="contextMenu" [style.left.px]="contextMenu.x" [style.top.px]="contextMenu.y">
+  <h4>{{ contextMenu.node.data.na }}</h4>
+  <hr>
+  <ul>
+    <li (click)="edit()"><a>Edit</a></li>
+    <li (click)="copy()"><a>コピー</a></li>
+    <li (click)="cut()"><a>切り取り</a></li>
+    <li (click)="add(tree)"><a>新規</a></li>
+    <li (click)="del(tree)"><a>削除</a></li>
+    <li (click)="paste()"><a [style.opacity]="canPaste() && 1 || 0.3">貼り付け</a></li>
+  </ul>
+</div>
