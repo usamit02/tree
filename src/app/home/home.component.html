@@ -1,0 +1,47 @@
+<form [formGroup]=roomForm (ngSubmit)="save()">
+  <label>紹介文　<textarea name="discription" cols="70" rows="5" placeholder="部屋の目的や活動内容など" [formControl]="discription"></textarea></label>
+  <div style="display:flex;">
+    <label>機能　</label>
+    <label><input type="checkbox" name="chat" [formControl]="chat" [value]="1" />チャット　</label>
+    <label><input type="checkbox" name="contents" (change)="changeContents()" [formControl]="contents" [value]="1" />コンテンツ　</label>
+    <label *ngIf="contents.value"><input type="checkbox" name="paid" [formControl]="paid" [value]="1">この先課金　</label>
+  </div>
+  <ng-container *ngIf="paid.value">
+    <label>月額<input type="number" min="50" max="100000" name="amount" step="100" [formControl]="amount" />円</label>
+    <label>　毎月<input type="number" min="0" max="31" [formControl]="billing_day" name="billing_day" />日引落</label>
+    <label>　お試し期間<input type="number" min="0" max="365" [formControl]="trial_days" name="trial_days" />日間</label>
+    <div style="display:flex;">
+      <label><input type="radio" name="no_prorate" [formControl]="prorate" [value]="false" [checked]="!prorate.value">月決め料金</label>
+      <label><input type="radio" name="prorate" [formControl]="prorate" [value]="true" [checked]="prorate.value">日割り清算する</label>
+    </div>
+  </ng-container>
+  <input type="submit" value="保存" [disabled]="roomForm.pristine || roomForm.invalid || roomForm.submitted" />
+  <input type="button" value="取消" (click)="undo(room)" [disabled]="roomForm.pristine" />
+</form>
+<!--
+ <label>紹介文　<textarea name="discription" cols="70" rows="5" [(ngModel)]="room.discription" placeholder="部屋の目的や活動内容など"
+      #discription="ngModel"></textarea></label>
+  <div style="display:flex;">
+    <label>部屋の種類　</label>
+    <label><input type="checkbox" name="chat" [(ngModel)]="room.chat" [value]="1" #chat="ngModel">チャット</label>
+    <label><input type="checkbox" name="contents" [(ngModel)]="room.contents" #contents="ngModel" [value]="1" (change)="changeContents()">コンテンツ</label>
+    <label *ngIf="room.contents"><input type="checkbox" name="pay" [(ngModel)]="pay" [value]="1">この先課金</label>
+  </div>
+  <ng-container *ngIf="pay">
+    <label>月額<input type="number" name="amount" step="100" min="0" max="100000" [(ngModel)]="room.amount" /></label>
+    <label>　引き落とし日<input type="number" min="0" max="31" [(ngModel)]="room.billing_day" name="billing_day" /></label>
+    <label>　お試し期間<input type="number" min="0" max="365" [(ngModel)]="room.trial_days" name="trial_days" />日間</label>
+    <div style="display:flex;">
+      <label><input type="radio" name="no_prorate" [(ngModel)]="room.prorate" [value]="0" [checked]="!room.prorate">月決め料金</label>
+      <label><input type="radio" name="prorate" [(ngModel)]="room.prorate" [value]="1" [checked]="room.prorate">日割り清算する</label>
+    </div>
+  </ng-container>
+  <input type="submit" value="保存" [disabled]="roomForm.pristine || roomForm.invalid || roomForm.submitted" />
+
+
+
+
+
+
+
+-->

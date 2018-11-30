@@ -4,13 +4,13 @@
     <app-tree (selected)="onSelected($event)"></app-tree>
   </mat-sidenav>
   <mat-sidenav-content>
-    <mat-toolbar color="primary">
+    <mat-toolbar color="primary" [class.paid]="room.price">
       <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle()">
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>
       <span>{{room.na}}
       </span>
     </mat-toolbar>
-    <!-- Add Content Here -->
+    <app-home [room]="room"></app-home>
   </mat-sidenav-content>
 </mat-sidenav-container>
