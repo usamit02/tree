@@ -14,6 +14,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { TableComponent } from './table/table.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HomeComponent } from './home/home.component';
+import { MemberComponent } from './member/member.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -21,7 +22,8 @@ import { HomeComponent } from './home/home.component';
     NavComponent,
     DashboardComponent,
     TableComponent,
-    HomeComponent
+    HomeComponent,
+    MemberComponent
   ],
   imports: [
     BrowserModule,

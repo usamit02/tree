@@ -1,21 +1,29 @@
-import { Component, OnInit, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, EventEmitter, Output, ViewChild } from '@angular/core';
 import { MysqlService } from '../service/mysql.service';
 import { TREE_ACTIONS, KEYS, ITreeOptions, TreeNode, TreeModel, TreeDropDirective } from 'angular-tree-component';
-import * as _ from 'lodash';
 import { Room } from '../class';
-import { userInfo } from 'os';
+
 @Component({
-  selector: 'app-tree',
-  templateUrl: './tree.component.html',
-  styleUrls: ['./tree.component.scss']
+  selector: 'app-member',
+  templateUrl: './member.component.html',
+  styleUrls: ['./member.component.scss']
 })
-export class TreeComponent implements OnInit {
+export class MemberComponent implements OnInit {
+  @Input()
+  set room(room: Room) {
+    this.getNode(room);
+    this._room = room;
+  }
+  get room() {
+    return this._room;
+  }
   @Input() user;
   @Output() selected = new EventEmitter<Room>();
   @ViewChild('tree') tree;
+  private _room: Room;
+  users: string;
   rooms = [];
   nodes = [];
-  room: string;
   options: ITreeOptions = {
     displayField: 'na',
     isExpandedField: 'expanded',
@@ -28,12 +36,12 @@ export class TreeComponent implements OnInit {
         },
         contextMenu: (tree: TreeModel, node: TreeNode, e: MouseEvent) => {
           e.preventDefault();
-          if (this.contextMenu && node === this.contextMenu.node) {
+          if (this.contextMenu && node === this.contextMenu.node || (!this.doCut && node.data.id > -2) || node.data.room !== this.room.id) {
             return this.closeMenu();
           }
           this.contextMenu = {
             node: node,
-            x: e.pageX,
+            x: 100,
             y: e.pageY
           };
         },
@@ -43,11 +51,13 @@ export class TreeComponent implements OnInit {
           TREE_ACTIONS.TOGGLE_ACTIVE(tree, node, e);
         },
         drop: (tree: TreeModel, node: TreeNode, e: MouseEvent, { from, to }) => {
-          if (node.parent) {
+          if (node.parent && node.id > -1) {
             tree.moveNode(from, { parent: node, index: to.index });
+            nodeNum(this.tree);
+            this.tree.treeModel.update();
             this.change = true;
           } else {
-            alert("権限がありません。");
+            alert("そこには移動できません。");
           }
         }
 
@@ -60,7 +70,15 @@ export class TreeComponent implements OnInit {
     },
     nodeHeight: 23,
     allowDrag: (node) => {
-      return true;
+      if (node.id > -2) {
+        return false;
+      } else {
+        if (node.data.room === this.room.id) {
+          return true;
+        } else {
+          return false;
+        }
+      }
     },
     allowDrop: (node) => {
       return true;
@@ -74,11 +92,6 @@ export class TreeComponent implements OnInit {
   closeMenu = () => {
     this.contextMenu = null;
   }
-  copy = () => {
-    this.sourceNode = this.contextMenu.node;
-    this.doCut = false;
-    this.closeMenu();
-  }
   cut = () => {
     this.sourceNode = this.contextMenu.node;
     this.doCut = true;
@@ -88,11 +101,13 @@ export class TreeComponent implements OnInit {
     if (!this.canPaste()) {
       return;
     }
-    this.doCut
-      ? this.sourceNode.treeModel.moveNode(this.sourceNode, { parent: this.contextMenu.node, index: 9999999999999 })
-      : this.sourceNode.treeModel.copyNode(this.sourceNode, { id: 999, parent: this.contextMenu.node, index: 9999999999999 });
+    if (this.doCut) {
+      this.sourceNode.treeModel.moveNode(this.sourceNode, { parent: this.contextMenu.node, index: 9999999999999 });
+      this.doCut = false;
+    }
     this.sourceNode = null;
     this.change = true;
+    nodeNum(this.tree);
     this.closeMenu();
   }
   canPaste = () => {
@@ -112,45 +127,11 @@ export class TreeComponent implements OnInit {
   stopEdit = () => {
     this.editNode = null;
   }
-  add = (tree) => {
-    let node = this.contextMenu.node;
-    this.mysql.newNode(node.id).subscribe((data: any) => {
-      if (data.maxId) {
-        let room = new Room(data.maxId, node.id, "新しい部屋", 0);
-        let rooms = JSON.parse(this.room);
-        rooms.push(room);
-        this.room = JSON.stringify(rooms);
-        room.price = getPrice(node.id, rooms);
-        if (!node.data.children) node.data.children = [];
-        node.data.children.push(room);
-        tree.treeModel.update();
-        tree.treeModel.getNodeById(node.id).expandAll();
-        let editNode = tree.treeModel.getNodeById(data.maxId);
-        this.editNode = editNode;
-      } else {
-        alert("データーベースエラーにより新しい部屋の作成に失敗しました。");
-      }
-    });
-    this.closeMenu();
-  }
-  del = (tree) => {
-    this.change = true;
-    let node = this.contextMenu.node;
-    let parentNode = node.realParent ? node.realParent : node.treeModel.virtualRoot;
-    _.remove(parentNode.data.children, function (child) {
-      return child === node.data;
-    });
-    tree.treeModel.update();
-    this.closeMenu();
-    if (node.parent.data.children.length === 0) {
-      node.parent.data.hasChildren = false;
-    }
-  }
   filterFn(value: string, treeModel: TreeModel) {
     treeModel.filterNodes((node: TreeNode) => fuzzysearch(value, node.data.name));
   }
   undo() {
-    this.getNode();
+    this.getNode(this.room);
     this.change = false;
   }
   save(treeModel: TreeModel) {
@@ -173,7 +154,7 @@ export class TreeComponent implements OnInit {
       addNodes(treeModel.nodes[i]);
     }
     var sql = "";
-    var rooms = JSON.parse(this.room);
+    var rooms = JSON.parse(this.users);
     var maxId = Math.max(...rooms.map(room => room.id));
     const noProp = ["auth", "children", "amount", "billing_day", "trial_days", "price"];
     nodes.forEach((node) => {
@@ -211,71 +192,68 @@ export class TreeComponent implements OnInit {
       sql += "DELETE FROM t01room WHERE id=" + rooms[i].id + ";\n";
     }
     console.log(sql);
-    this.mysql.saveNode(this.user.uid, sql.substr(0, sql.length - 1)).subscribe((data: any) => {
-      if (data.msg !== "ok") {
-        this.change = false;
-        this.getNode();
-      } else {
-        alert("データベースエラー C-Lifeまでお問合せください。");
-      }
-    });
+    /*
+      this.mysql.saveNode(this.room ? this.room : "AMavP9Icrfe7GbbMt0YCXWFWIY42", sql.substr(0, sql.length - 1)).subscribe((data: any) => {
+        if (data.msg !== "ok") {
+          this.change = false;
+          this.getNode(this.room);
+        } else {
+          alert("データベースエラー C-Lifeまでお問合せください。");
+        }
+      });*/
   }
   constructor(private mysql: MysqlService) { }
 
   ngOnInit() {
-    this.getNode();
+
   }
-  public getNode() {
-    this.mysql.getNode(this.user.uid).subscribe((rooms: any) => {
-      this.room = JSON.stringify(rooms);
-      var authRooms = rooms.filter(room => { return room.auth !== null; });
-      var rootRooms = [];
-      for (let i = 0; i < authRooms.length; i++) {
-        if (!authRooms.filter(room => { return room.id === authRooms[i].parent }).length) {
-          rootRooms.push(authRooms[i]);
+  public getNode(room) {
+    this.mysql.query("owner/member.php", { room: room.id }).subscribe((users: any) => {
+      this.users = JSON.stringify(users);
+      this.nodes = [
+        { id: -1, na: "審査待ち", children: [], num: "" },
+        { id: 0, na: "メンバー", children: [], num: "" },
+        { id: 1, na: "マネージャー", children: [], num: "" },
+        { id: 2, na: "クリエイター", children: [], num: "" },
+        { id: 3, na: "マスター", children: [], num: "" },
+        {
+          id: 99, children: [
+            { id: 100, na: "検索した人をドラッグして役職や会員に追加できます。" }
+          ]
         }
-      }
-      this.nodes = [];
-      for (let i = 0; i < rootRooms.length; i++) {
-        let res = addRooms(rootRooms[i].id, rooms);
-        if (res.length) rootRooms[i].children = res;
-        this.nodes.push(rootRooms[i]);
-      }
+      ]
+      this.nodes.forEach(node => {
+        let children = users.filter(user => { return user.auth === node.id; });
+        if (children.length) {
+          node.children = children;
+          node.num = '(' + children.length + ')';
+        }
+      });
     });
-    function addRooms(parent, rooms) {
-      var childs = [];
-      let children = rooms.filter(node => { return node.parent === parent; });
-      for (let i = 0; i < children.length; i++) {
-        children[i].price = getPrice(children[i].parent, rooms);
-        let res = addRooms(children[i].id, rooms);
-        if (res.length) { children[i].children = res; }
-        childs.push(children[i]);
-      }
-      return childs;
-    }
   }
-  getPrice(parent) {
-    var price = 0;
-    do {
-      let parents = this.nodes.filter(node => { return node.id === parent; });
-      if (parents.length) {
-        price += parents[0].amount ? parents[0].amount : 0;
-        parent = parents[0].id;
+  search(x: string) {
+    this.mysql.query("owner/member.php", { search: x }).subscribe((users: any) => {
+      this.nodes[5].children = [];
+      if (users.length === 50) {
+        this.nodes[5].children.push({ id: 100, na: "50人以上該当しています。\n全てを表示できません。" });
       }
-    } while (parent.length)
-    return price;
+      if (users.length) {
+        for (let i = 0; i < users.length; i++) {
+          let node = { id: users[i].id, na: users[i].na, room: this.room.id };
+          this.nodes[5].children.push(node);
+        }
+      } else {
+        this.nodes[5].children.push({ id: 100, na: "誰もいない。" });
+      }
+      this.tree.treeModel.update();
+      const node = this.tree.treeModel.getNodeById(99);
+      node.expand();
+    });
   }
-}
-function getPrice(parent, rooms) {
-  var price = 0;
-  do {
-    let parents = rooms.filter(room => { return room.id === parent; });
-    if (parents.length) {
-      price += parents[0].amount ? parents[0].amount : 0;
-      parent = parents[0].id;
-    }
-  } while (parent.length)
-  return price;
+  clearSearch() {
+    let input = <HTMLInputElement>document.getElementById("search");
+    input.value = "";
+  }
 }
 function fuzzysearch(needle: string, haystack: string) {
   const haystackLC = haystack.toLowerCase();
@@ -301,4 +279,10 @@ function fuzzysearch(needle: string, haystack: string) {
     return false;
   }
   return true;
+}
+function nodeNum(tree) {
+  for (let i = 0; i < tree.treeModel.nodes.length; i++) {
+    let num = tree.treeModel.nodes[i].children.length;
+    tree.treeModel.nodes[i].num = num ? "(" + num + ")" : "";
+  }
 }

@@ -1,9 +1,7 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Room } from '../class';
 import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms';
 import { MysqlService } from '../service/mysql.service';
-import { EventEmitter } from 'protractor';
-//import { TreeComponent } from "../tree/tree.component";
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -11,7 +9,7 @@ import { EventEmitter } from 'protractor';
 })
 export class HomeComponent implements OnInit {
   private _room: Room;
-  user = { uid: "AMavP9Icrfe7GbbMt0YCXWFWIY42" };
+  // user = { uid: "AMavP9Icrfe7GbbMt0YCXWFWIY42" };
   pay: boolean = false;
   plan = { amount: 3000, billing_day: null, trial_days: null };
   @Input()
@@ -21,6 +19,8 @@ export class HomeComponent implements OnInit {
   get room() {
     return this._room;
   }
+  @Input() user;
+  @Output() saveRoom = new EventEmitter();
   discription = new FormControl(
     Validators.maxLength(500)
   );
@@ -63,21 +63,21 @@ export class HomeComponent implements OnInit {
     let params: any = { room: {}, plan: {} };
     const planProp = ['amount', 'billing_day', 'trial_days'];
     for (const p of Object.keys(this.roomForm.value)) {
-      if (!planProp.filter(prop => { return p === prop; }).length && this.roomForm.value[p] !== this.room[p]) {
-        params.room[p] = this.roomForm.value[p];
+      if (!planProp.filter(prop => { return p === prop; }).length && !(this.roomForm.value[p] == this.room[p] || this.roomForm.value[p] == undefined)) {
+        params.room[p] = this.roomForm.value[p] === false ? 0 : this.roomForm.value[p];
       }
     }
-    if (this.roomForm.value.paid && planProp.filter(p => { return this.roomForm.value[p] !== this.room[p]; }).length) {
+    if (this.roomForm.value.paid && planProp.filter(p => { return !(this.roomForm.value[p] == this.room[p] || this.roomForm.value[p] == undefined); }).length) {
       for (let i = 0; i < planProp.length; i++) {
-        params.plan[planProp[i]] = this.roomForm.value[planProp[i]];
+        params.plan[planProp[i]] = this.roomForm.value[planProp[i]] === false ? 0 : this.roomForm.value[planProp[i]];
       }
     }
-    this.mysql.save("/owner/save.php", { roomForm: JSON.stringify(params), roomId: this.room.id }).subscribe((data: any) => {
+    this.mysql.query("owner/save.php", { roomForm: JSON.stringify(params), roomId: this.room.id }).subscribe((data: any) => {
       if (data.msg === "ok") {
         for (const p of Object.keys(this.roomForm.value)) {
           this._room[p] = this.roomForm.value[p];
         }
-        //this.tree.getNode();
+        this.saveRoom.emit("");
       } else {
         alert("データベースエラー C-Lifeまでお問合せください。");
       }

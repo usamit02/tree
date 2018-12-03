@@ -5,24 +5,24 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class MysqlService {
-  url: string = "http://localhost/public_html";
-  //url: string = "https://bloggersguild.cf";
+  url: string = "http://localhost/public_html/";
+  //url: string = "https://bloggersguild.cf/";
   constructor(private http: HttpClient) {
   }
-  save(url: string, params: any): Observable<Object> {
+  query(url: string, params: any): Observable<Object> {
     return this.http.get(this.url + url, { params: params });
   }
   room(uid: string): Observable<Object> {
-    return this.http.get(this.url + "/room.php", { params: { uid: uid } });
+    return this.http.get(this.url + "room.php", { params: { uid: uid } });
   }
   getNode(uid: string): Observable<Object> {
-    return this.http.get(this.url + "/owner/room.php", { params: { uid: uid } });
+    return this.http.get(this.url + "owner/room.php", { params: { uid: uid } });
   }
   saveNode(uid: string, sql: string): Observable<Object> {
-    return this.http.get(this.url + "/owner/room.php", { params: { uid: uid, sql: sql } });
+    return this.http.get(this.url + "owner/room.php", { params: { uid: uid, sql: sql } });
   }
   newNode(parent: number): Observable<Object> {
-    return this.http.get(this.url + "/owner/room.php", { params: { parent: parent.toString() } });
+    return this.http.get(this.url + "owner/room.php", { params: { parent: parent.toString() } });
   }
 
 }

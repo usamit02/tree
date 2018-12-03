@@ -1,16 +1,23 @@
 <mat-sidenav-container class="sidenav-container">
-  <mat-sidenav #drawer class="sidenav" fixedInViewport="true" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+  <mat-sidenav #drawerL class="sidenav" fixedInViewport="true" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="!(isHandset$ | async)">
-    <app-tree (selected)="onSelected($event)"></app-tree>
+    <app-tree [user]="user" (selected)="onSelected($event)"></app-tree>
+  </mat-sidenav>
+  <mat-sidenav #drawerR position="end" class="sidenav" fixedInViewport="true" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="!(isHandset$ | async)">
+    <app-member [user]="user" [room]="room"></app-member>
   </mat-sidenav>
   <mat-sidenav-content>
     <mat-toolbar color="primary" [class.paid]="room.price">
-      <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle()">
+      <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawerL.toggle()">
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>
       <span>{{room.na}}
-      </span>
+      </span><span class="fill-space"></span>
+      <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawerR.toggle()">
+        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+      </button>
     </mat-toolbar>
-    <app-home [room]="room"></app-home>
+    <app-home [user]="user" [room]="room" (saveRoom)=saveRoom()></app-home>
   </mat-sidenav-content>
 </mat-sidenav-container>

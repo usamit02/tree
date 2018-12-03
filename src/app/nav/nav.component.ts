@@ -1,15 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Room } from '../class';
-import { HomeComponent } from '../home/home.component';
+import { TreeComponent } from "../tree/tree.component"
 @Component({
   selector: 'app-nav',
   templateUrl: './nav.component.html',
   styleUrls: ['./nav.component.scss'],
 })
 export class NavComponent {
+  @ViewChild(TreeComponent) protected tree: TreeComponent;
+  user = { uid: "AMavP9Icrfe7GbbMt0YCXWFWIY42" };
   room: Room = new Room(0, 0, "お知らせ");
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
@@ -26,7 +28,7 @@ export class NavComponent {
   onSelected(room) {
     this.room = room;
   }
-  onEdited() {
-    console.log("edit");
+  saveRoom() {
+    this.tree.getNode();
   }
 }
