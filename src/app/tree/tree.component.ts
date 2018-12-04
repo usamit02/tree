@@ -3,7 +3,6 @@ import { MysqlService } from '../service/mysql.service';
 import { TREE_ACTIONS, KEYS, ITreeOptions, TreeNode, TreeModel, TreeDropDirective } from 'angular-tree-component';
 import * as _ from 'lodash';
 import { Room } from '../class';
-import { userInfo } from 'os';
 @Component({
   selector: 'app-tree',
   templateUrl: './tree.component.html',
@@ -231,23 +230,40 @@ export class TreeComponent implements OnInit {
       var authRooms = rooms.filter(room => { return room.auth !== null; });
       var rootRooms = [];
       for (let i = 0; i < authRooms.length; i++) {
-        if (!authRooms.filter(room => { return room.id === authRooms[i].parent }).length) {
+        var root = true;
+        var parent = authRooms[i].parent;
+        do {
+          let parents = rooms.filter(room => { return room.id === parent });
+          if (parents.length) {
+            if (authRooms.filter(room => { return room.id === parents[0].id }).length) {
+              root = false;
+            }
+            parent = parents[0].parent;
+          } else {
+            parent = null;
+          }
+        } while (parent !== null);
+        if (root) {
           rootRooms.push(authRooms[i]);
         }
       }
       this.nodes = [];
       for (let i = 0; i < rootRooms.length; i++) {
-        let res = addRooms(rootRooms[i].id, rooms);
+        let res = addRooms(rootRooms[i].id, rooms, rootRooms[i].auth);
         if (res.length) rootRooms[i].children = res;
         this.nodes.push(rootRooms[i]);
       }
+      console.log(this.nodes);
     });
-    function addRooms(parent, rooms) {
+    function addRooms(parent, rooms, auth) {
       var childs = [];
       let children = rooms.filter(node => { return node.parent === parent; });
       for (let i = 0; i < children.length; i++) {
         children[i].price = getPrice(children[i].parent, rooms);
-        let res = addRooms(children[i].id, rooms);
+        if (children[i].auth === null || children[i].auth < auth) {
+          children[i].auth = auth;
+        }
+        let res = addRooms(children[i].id, rooms, children[i].auth);
         if (res.length) { children[i].children = res; }
         childs.push(children[i]);
       }
