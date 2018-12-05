@@ -10,6 +10,7 @@ export class Room {
     public contents?: number,
     public plan?: number,
     public prorate?: number,
+    public auth?: number,
     public amount?: number,
     public billing_day?: number,
     public trial_days?: number

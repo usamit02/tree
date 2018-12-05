@@ -253,6 +253,7 @@ export class TreeComponent implements OnInit {
         if (res.length) rootRooms[i].children = res;
         this.nodes.push(rootRooms[i]);
       }
+      console.log("room tree:");
       console.log(this.nodes);
     });
     function addRooms(parent, rooms, auth) {

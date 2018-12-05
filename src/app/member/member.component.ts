@@ -2,7 +2,7 @@ import { Component, Input, OnInit, EventEmitter, Output, ViewChild } from '@angu
 import { MysqlService } from '../service/mysql.service';
 import { TREE_ACTIONS, KEYS, ITreeOptions, TreeNode, TreeModel, TreeDropDirective } from 'angular-tree-component';
 import { Room } from '../class';
-
+import * as _ from 'lodash';
 @Component({
   selector: 'app-member',
   templateUrl: './member.component.html',
@@ -36,7 +36,10 @@ export class MemberComponent implements OnInit {
         },
         contextMenu: (tree: TreeModel, node: TreeNode, e: MouseEvent) => {
           e.preventDefault();
-          if (this.contextMenu && node === this.contextMenu.node || (!this.doCut && node.data.id > -2) || node.data.room !== this.room.id) {
+          if (this.contextMenu && node === this.contextMenu.node || (!this.doCut && node.data.id >= 0) ||
+            ('room' in node.data && node.data.room !== this.room.id) ||
+            ('auth' in node.data && node.data.auth > this.room.auth) ||
+            !('auth' in node.data) && node.data.id > this.room.auth) {
             return this.closeMenu();
           }
           this.contextMenu = {
@@ -51,7 +54,8 @@ export class MemberComponent implements OnInit {
           TREE_ACTIONS.TOGGLE_ACTIVE(tree, node, e);
         },
         drop: (tree: TreeModel, node: TreeNode, e: MouseEvent, { from, to }) => {
-          if (node.parent && node.id > -1) {
+          if (!(node.data.id > 0)) node = node.parent;
+          if (node.parent && node.data.id > 10 && node.data.id <= this.room.auth) {
             tree.moveNode(from, { parent: node, index: to.index });
             nodeNum(this.tree);
             this.tree.treeModel.update();
@@ -70,10 +74,10 @@ export class MemberComponent implements OnInit {
     },
     nodeHeight: 23,
     allowDrag: (node) => {
-      if (node.id > -2) {
+      if (node.id >= 0) {
         return false;
       } else {
-        if (node.data.room === this.room.id) {
+        if (node.data.room === this.room.id && node.data.auth <= this.room.auth) {
           return true;
         } else {
           return false;
@@ -116,16 +120,21 @@ export class MemberComponent implements OnInit {
     }
     return this.sourceNode.treeModel.canMoveNode(this.sourceNode, { parent: this.contextMenu.node, index: 0 });
   }
-  edit = () => {
-    this.editNode = this.contextMenu.node;
-    this.closeMenu();
+  ban = (tree) => {
+    if (confirm("本人の意思にかかわらず退会させてよろしいですか。")) {
+      this.del(tree);
+    }
   }
-  saveEdit = () => {
+  del = (tree) => {
     this.change = true;
-    this.editNode = null;
-  }
-  stopEdit = () => {
-    this.editNode = null;
+    let node = this.contextMenu.node;
+    let parentNode = node.realParent ? node.realParent : node.treeModel.virtualRoot;
+    _.remove(parentNode.data.children, function (child) {
+      return child === node.data;
+    });
+    nodeNum(tree);
+    tree.treeModel.update();
+    this.closeMenu();
   }
   filterFn(value: string, treeModel: TreeModel) {
     treeModel.filterNodes((node: TreeNode) => fuzzysearch(value, node.data.name));
@@ -136,71 +145,48 @@ export class MemberComponent implements OnInit {
   }
   save(treeModel: TreeModel) {
     var nodes = [];
-    function addNodes(node) {
-      if (node.children) {
-        for (let i = 0; i < node.children.length; i++) {
-          node.children[i].idx = i;
-          node.children[i].folder = "children" in node.children[i] ? 1 : 0;
-          node.children[i].parent = node.id;
-          nodes.push(node.children[i]);
-          addNodes(node.children[i]);
+    for (let i = treeModel.nodes.length; i > 0; i--) {
+      let node = treeModel.nodes[i - 1];
+      if (node.id > 1 && node.id < 10000 && "children" in node) {
+        for (let j = 0; j < node.children.length; j++) {
+          let child = node.children[j];
+          if (child.room === this.room.id && !nodes.filter(node => { return node.id === child.id; }).length) {
+            child.auth = treeModel.nodes[i - 1].id;
+            child.idx = j;
+            nodes.push(child);
+          }
         }
       }
-    }
-    for (let i = 0; i < treeModel.nodes.length; i++) {
-      //treeModel.nodes[i].idx = i;ルートノードは順番変更できない
-      treeModel.nodes[i].folder = "children" in treeModel.nodes[i] ? 1 : 0;
-      nodes.push(treeModel.nodes[i]);
-      addNodes(treeModel.nodes[i]);
     }
     var sql = "";
-    var rooms = JSON.parse(this.users);
-    var maxId = Math.max(...rooms.map(room => room.id));
-    const noProp = ["auth", "children", "amount", "billing_day", "trial_days", "price"];
+    var users = JSON.parse(this.users);
+    users = users.filter(user => { return user.room === this.room.id && user.auth > 1; });
     nodes.forEach((node) => {
-      var val = "";
-      let room = rooms.filter(room => { return room.id == node.id });
-      if (room.length) {
-        for (const p of Object.keys(room[0])) {
-          if (!noProp.filter(prop => { return p === prop; }).length && room[0][p] !== node[p]) {
-            if ((p === "na" || p === "discription") && node[p] !== null) {
-              val += p + '="' + node[p] + '",';
-            } else {
-              val += p + "=" + node[p] + ",";
-            }
-          }
+      let user = users.filter(user => { return user.id === node.id });
+      if (user.length) {
+        if (node.auth !== user[0].auth || node.idx !== user[0].idx) {
+          sql += "UPDATE t71roomauth SET auth=" + node.auth + ",idx=" + node.idx + " WHERE uid='" + node.id + "' AND rid=" + node.room + ";\n";
         }
-        sql += val ? "UPDATE t01room SET " + val.substr(0, val.length - 1) + " WHERE id=" + room[0].id + ";\n" : "";
-        rooms = rooms.filter(room => { return room.id != node.id; });
+        users = users.filter(user => { return user.id !== node.id; });
       } else {
-        var key = "";
-        if (node.id > 100000000000) { maxId++; node.id = maxId; }
-        for (const p of Object.keys(node)) {
-          if (!noProp.filter(prop => { return p === prop; }).length) {
-            key += p + ","
-            if ((p == "na" || p == "discription") && !(node[p] === null || node[p] === "null")) {
-              val += '"' + node[p] + '",';
-            } else {
-              val += node[p] + ",";
-            }
-          }
-        }
-        sql += "INSERT INTO t01room (" + key.substr(0, key.length - 1) + ") VALUES (" + val.substr(0, val.length - 1) + ");\n";
+        sql += "INSERT INTO t71roomauth (uid,rid,auth,idx) VALUES ('"
+          + node.id + "'," + node.room + "," + node.auth + "," + node.idx + ");\n";
       }
     });
-    for (let i = 0; i < rooms.length; i++) {
-      sql += "DELETE FROM t01room WHERE id=" + rooms[i].id + ";\n";
+    for (let i = 0; i < users.length; i++) {
+      sql += "DELETE FROM t71roomauth WHERE uid='" + users[i].id + "' AND rid=" + users[i].room + ";\n";
     }
     console.log(sql);
-    /*
-      this.mysql.saveNode(this.room ? this.room : "AMavP9Icrfe7GbbMt0YCXWFWIY42", sql.substr(0, sql.length - 1)).subscribe((data: any) => {
-        if (data.msg !== "ok") {
-          this.change = false;
+    if (sql) {
+      this.mysql.query("owner/save.php", { sql: sql.substr(0, sql.length - 1) }).subscribe((data: any) => {
+        if (data.msg === "ok") {
           this.getNode(this.room);
         } else {
           alert("データベースエラー C-Lifeまでお問合せください。");
         }
-      });*/
+      });
+    }
+    this.change = false;
   }
   constructor(private mysql: MysqlService) { }
 
@@ -211,14 +197,16 @@ export class MemberComponent implements OnInit {
     this.mysql.query("owner/member.php", { room: room.id }).subscribe((users: any) => {
       this.users = JSON.stringify(users);
       this.nodes = [
-        { id: -1, na: "審査待ち", children: [], num: "" },
-        { id: 0, na: "メンバー", children: [], num: "" },
-        { id: 1, na: "マネージャー", children: [], num: "" },
-        { id: 2, na: "クリエイター", children: [], num: "" },
-        { id: 3, na: "マスター", children: [], num: "" },
+        { id: 0, na: "審査待ち", children: [] },
+        { id: 1, na: "メンバー", children: [] },
+        { id: 100, na: "アシスタント", children: [] },
+        { id: 200, na: "マネージャー", children: [] },
+        { id: 500, na: "クリエイター", children: [] },
+        { id: 1000, na: "マスター", children: [] },
+        { id: 9000, na: "オーナー", children: [] },
         {
-          id: 99, children: [
-            { id: 100, na: "検索した人をドラッグして役職や会員に追加できます。" }
+          id: 9999, children: [
+            { id: 10000, na: "検索した人をドラッグして役職や会員に追加できます。" }
           ]
         }
       ]
@@ -229,24 +217,30 @@ export class MemberComponent implements OnInit {
           node.num = '(' + children.length + ')';
         }
       });
+      console.log("user:");
+      console.log(this.user);
+      console.log("member:");
+      console.log(this.nodes);
+      console.log("room:");
+      console.log(this.room);
     });
   }
   search(x: string) {
     this.mysql.query("owner/member.php", { search: x }).subscribe((users: any) => {
-      this.nodes[5].children = [];
+      this.nodes[7].children = [];
       if (users.length === 50) {
-        this.nodes[5].children.push({ id: 100, na: "50人以上該当しています。\n全てを表示できません。" });
+        this.nodes[7].children.push({ id: 10000, na: "50人以上該当しています。\n全てを表示できません。" });
       }
       if (users.length) {
         for (let i = 0; i < users.length; i++) {
-          let node = { id: users[i].id, na: users[i].na, room: this.room.id };
-          this.nodes[5].children.push(node);
+          let node = { id: users[i].id, na: users[i].na, room: this.room.id, auth: 0 };
+          this.nodes[7].children.push(node);
         }
       } else {
-        this.nodes[5].children.push({ id: 100, na: "誰もいない。" });
+        this.nodes[7].children.push({ id: 10000, na: "誰もいない。" });
       }
       this.tree.treeModel.update();
-      const node = this.tree.treeModel.getNodeById(99);
+      const node = this.tree.treeModel.getNodeById(9999);
       node.expand();
     });
   }
