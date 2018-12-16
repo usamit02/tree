@@ -120,13 +120,36 @@ export class MemberComponent implements OnInit {
     }
     return this.sourceNode.treeModel.canMoveNode(this.sourceNode, { parent: this.contextMenu.node, index: 0 });
   }
-  ban = (tree) => {
-    if (confirm("本人の意思にかかわらず退会させてよろしいですか。")) {
-      this.del(tree);
+  OK() {
+    this.mysql.query("pay/roompay.php", { uid: this.contextMenu.node.data.id, rid: this.room.id, ok: this.user.uid }).subscribe((data: any) => {
+      if (data.msg === "ok") {
+        this.getNode(this.room.id);
+      } else {
+        alert(data.error + "\nC-Lifeまでお問合せください。");
+      }
+    });
+  }
+  NG(tree) {
+    if (confirm("申し込みを却下してよろしいですか。\n※この操作は取り消しできません。")) {
+      this.NGban(tree);
     }
   }
+  ban(tree) {
+    if (confirm("本人の意思にかかわらず退会させてよろしいですか。\n※この操作は取り消しできません。")) {
+      this.NGban(tree);
+    }
+  }
+  NGban(tree) {
+    this.mysql.query("pay/roompay.php", { uid: this.contextMenu.node.data.id, rid: this.room.id, ban: this.user.uid }).subscribe((data: any) => {
+      if (data.msg === "ok") {
+        this.del(tree);
+        this.change = false;
+      } else {
+        alert(data.error + "\nC-Lifeまでお問合せください。");
+      }
+    });
+  }
   del = (tree) => {
-    this.change = true;
     let node = this.contextMenu.node;
     let parentNode = node.realParent ? node.realParent : node.treeModel.virtualRoot;
     _.remove(parentNode.data.children, function (child) {
@@ -135,6 +158,7 @@ export class MemberComponent implements OnInit {
     nodeNum(tree);
     tree.treeModel.update();
     this.closeMenu();
+    this.change = true;
   }
   filterFn(value: string, treeModel: TreeModel) {
     treeModel.filterNodes((node: TreeNode) => fuzzysearch(value, node.data.name));
@@ -147,7 +171,7 @@ export class MemberComponent implements OnInit {
     var nodes = [];
     for (let i = treeModel.nodes.length; i > 0; i--) {
       let node = treeModel.nodes[i - 1];
-      if (node.id > 1 && node.id < 10000 && "children" in node) {
+      if (node.id > 9 && node.id < 10000 && "children" in node) {
         for (let j = 0; j < node.children.length; j++) {
           let child = node.children[j];
           if (child.room === this.room.id && !nodes.filter(node => { return node.id === child.id; }).length) {
@@ -160,7 +184,7 @@ export class MemberComponent implements OnInit {
     }
     var sql = "";
     var users = JSON.parse(this.users);
-    users = users.filter(user => { return user.room === this.room.id && user.auth > 1; });
+    users = users.filter(user => { return user.room === this.room.id && user.auth > 9; });
     nodes.forEach((node) => {
       let user = users.filter(user => { return user.id === node.id });
       if (user.length) {
@@ -237,7 +261,7 @@ export class MemberComponent implements OnInit {
           this.nodes[7].children.push(node);
         }
       } else {
-        this.nodes[7].children.push({ id: 10000, na: "誰もいない。" });
+        this.nodes[7].children.push({ id: 10000, na: "誰もいない..." });
       }
       this.tree.treeModel.update();
       const node = this.tree.treeModel.getNodeById(9999);

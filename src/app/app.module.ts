@@ -15,6 +15,9 @@ import { TableComponent } from './table/table.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HomeComponent } from './home/home.component';
 import { MemberComponent } from './member/member.component';
+import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import { TinyComponent } from './tiny/tiny.component';
+import { NgxTweetModule } from "ngx-tweet";
 @NgModule({
   declarations: [
     AppComponent,
@@ -23,7 +26,8 @@ import { MemberComponent } from './member/member.component';
     DashboardComponent,
     TableComponent,
     HomeComponent,
-    MemberComponent
+    MemberComponent,
+    TinyComponent
   ],
   imports: [
     BrowserModule,
@@ -43,7 +47,9 @@ import { MemberComponent } from './member/member.component';
     MatPaginatorModule,
     MatSortModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    CKEditorModule,
+    NgxTweetModule
   ],
   providers: [
     MysqlService

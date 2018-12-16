@@ -1,4 +1,4 @@
-<form [formGroup]=roomForm (ngSubmit)="save()">
+<form *ngIf="room.auth>=1000" [formGroup]=roomForm (ngSubmit)="saveRoomForm()">
   <label>紹介文　<textarea name="discription" cols="70" rows="5" placeholder="部屋の目的や活動内容など" [formControl]="discription"></textarea></label>
   <div style="display:flex;">
     <label>機能　</label>
@@ -9,6 +9,7 @@
   <ng-container *ngIf="paid.value">
     <label>月額<input type="number" min="50" max="100000" name="amount" step="100" [formControl]="amount" />円</label>
     <label>　毎月<input type="number" min="0" max="31" [formControl]="billing_day" name="billing_day" />日引落</label>
+    <label>　審査期間<input type="number" min="0" max="30" [formControl]="auth_days" name="auth_days" />日間</label>
     <label>　お試し期間<input type="number" min="0" max="365" [formControl]="trial_days" name="trial_days" />日間</label>
     <div style="display:flex;">
       <label><input type="radio" name="no_prorate" [formControl]="prorate" [value]="false" [checked]="!prorate.value">月決め料金</label>
@@ -16,8 +17,12 @@
     </div>
   </ng-container>
   <input type="submit" value="保存" [disabled]="roomForm.pristine || roomForm.invalid || roomForm.submitted" />
-  <input type="button" value="取消" (click)="undo(room)" [disabled]="roomForm.pristine" />
+  <input type="button" value="取消" (click)="undoRoom(room)" [disabled]="roomForm.pristine" />
 </form>
+<div id="fire2">
+  <p>This is some sample content.</p>
+</div>
+<textarea id="mytextarea">Hello, World!</textarea>
 <!--
  <label>紹介文　<textarea name="discription" cols="70" rows="5" [(ngModel)]="room.discription" placeholder="部屋の目的や活動内容など"
       #discription="ngModel"></textarea></label>
@@ -39,9 +44,17 @@
   <input type="submit" value="保存" [disabled]="roomForm.pristine || roomForm.invalid || roomForm.submitted" />
 
 
+<form *ngIf="room.auth>=500" [formGroup]=storyForm (ngSubmit)="saveStoryForm()">
+  <ng-container *ngFor="let story of storys">
+    <label>題<input maxlength="100" name="h2" [formControl]="story.h2" /></label>
+    <textarea name="txt" cols="200" rows="10" [formControl]="story.txt"></textarea></label>
+  </ng-container>
+  <input type="submit" value="保存" [disabled]="roomForm.pristine || roomForm.invalid || roomForm.submitted" />
+  <input type="button" value="取消" (click)="undo(room)" [disabled]="roomForm.pristine" />
+</form>
 
 
-
-
+ <editor name="tiny" id="tiny" apiKey="k5ac3vz6w0fxrw863ng9oartu6tyagjk7kmra9jetazslyfz" [init]="tinyInit"
+    [formControl]="tinyMCE"></editor>
 
 -->

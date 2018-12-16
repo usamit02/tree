@@ -12,6 +12,12 @@ export class MysqlService {
   query(url: string, params: any): Observable<Object> {
     return this.http.get(this.url + url, { params: params });
   }
+  api(url: string, params: any): Observable<Object> {
+    return this.http.get(url, { params: params });
+  }
+  upload(url: string, data: FormData): Observable<Object> {
+    return this.http.post(this.url + url, data);
+  }
   room(uid: string): Observable<Object> {
     return this.http.get(this.url + "room.php", { params: { uid: uid } });
   }

@@ -35,6 +35,6 @@
     <li *ngIf="!(contextMenu.node.data.id >= 0) && contextMenu.node.parent.data.id > 10" (click)="del(tree)"><a>削除</a></li>
     <li *ngIf="!(contextMenu.node.data.id >= 0) && contextMenu.node.parent.data.id ===1" (click)="ban(tree)"><a>強制退会</a></li>
     <li *ngIf="contextMenu.node.parent.data.id ===0" (click)="OK()"><a>OK</a></li>
-    <li *ngIf="contextMenu.node.parent.data.id ===0" (click)="NG()"><a>NG</a></li>
+    <li *ngIf="contextMenu.node.parent.data.id ===0" (click)="NG(tree)"><a>NG</a></li>
   </ul>
 </div>
