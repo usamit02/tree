@@ -1,6 +1,12 @@
 <div id="wrap">
+  <div fxLayout="row">
+    <div fxFlex class="tiny">test tiny</div>
+    <div fxFlex="40%" class="media">test media</div>
+  </div>
 </div>
-<form>
-</form>
-<button (click)="next()">新規</button>
+<div fxLayout="row" *ngFor="let story of storys">
+  <div fxFlex class="tiny" [innerHtml]="story.txt | safe: 'html'"></div>
+  <div fxFlex="40%" class="media" [innerHtml]="story.media"></div>
+</div>
+<button (click)="newrow()">新規</button>
 <button (click)="save()">保存</button>

@@ -18,11 +18,15 @@ export class TinyComponent implements OnInit {
     this.mysql.query("owner/story.php", { rid: this.rid }).subscribe((storys: any) => {
       this.orgStorys = JSON.stringify(storys);
       this.storys = storys;
-      for (let i = 0; i < storys.length; i++) {
-        $("#wrap").append('<div id="tiny' + i + '"class="tiny mce-content-body" contenteditable="true" style="position: relative;" spellcheck="false">' + storys[i].txt + '</div>');
-        $("form").append('<input id="row' + i + '" type="hidden"></input>');
-      }
-      this.tiny(0);
+      /* for (let i = 0; i < storys.length; i++) {
+         $("#wrap").append('<div id="row' + i + '" fxLayout="row"><div fxFlex id="tiny' + i +
+           '"class="tiny mce-content-body" contenteditable="true" style="position: relative;" spellcheck="false">'
+           + storys[i].txt + '</div><div fxFlex="40%" id="media' + i + '" class="media">' + storys[i].media + '</div></div>');
+       }*/
+      //const fn = this.tiny(0);
+      setTimeout(() => {
+        this.tiny(0);
+      }, 10000);
     });
   }
   tiny(id) {
@@ -31,7 +35,6 @@ export class TinyComponent implements OnInit {
       selector: selector,
       menubar: false,
       inline: true,
-      event_root: '#wrap',
       theme: 'inlite',
       language_url: 'https://bloggersguild.cf/js/ja.js',
       plugins: [
@@ -106,7 +109,7 @@ export class TinyComponent implements OnInit {
                   success: (data) => {
                     let widget = data.html.substring(0, data.html.indexOf("<script"));
                     tinymce.activeEditor.insertContent(
-                      '<div contenteditable="false" class="div_border" data-mce-style="width:' + data.width + 'px;">' + widget + '</div>');
+                      '<div contenteditable="false" class="tweet" data-mce-style="width:' + data.width + 'px;">' + widget + '</div>');
                   },
                   error: (jqXHR, exception) => {
                     var msg = '';
@@ -136,10 +139,12 @@ export class TinyComponent implements OnInit {
           }
         });
         editor.on('blur', (e) => {
-          let story = makeStory(editor);
-          let i = Number(editor.id.replace("tiny", ""));
-          this.storys[i].txt = story;
-          console.log(i + ":" + story);
+          if ($("#" + editor.id).attr("id") !== undefined) {
+            let story = makeStory(editor);
+            let i = Number(editor.id.replace("tiny", ""));
+            this.storys[i].txt = story;
+            console.log(i + ":" + story);
+          }
         });
       }
     });
@@ -154,11 +159,27 @@ export class TinyComponent implements OnInit {
       }
     }
     function makeStory(editor) {
-      var html = editor.getContent({ format: "html" });
-      html = makeHtml(html, editor, '<div class="div_border" contenteditable="false">&nbsp;</div>', 'twitter-widget');
+      var html = '<div>' + editor.getContent({ format: "html" }) + "</div>";
+      //html = makeHtml(html, editor, '<div class="tweet" contenteditable="false">&nbsp;</div>', 'twitter-widget');
+      html = makeHtml(html, editor, 'div.tweet', 'twitter-widget');
+      let ret = $(html).children("div");
+      return ret[0];
+    }
+    function makeHtml(html, editor, org, neo) {
+      let orgHtml = $(html).find(org);
+      if (orgHtml.length) {
+        let rawHtml = '<div>' + editor.getContent({ format: "raw" }) + '</div>';
+        let neoHtml = $(rawHtml).find(neo);
+        if (neoHtml.length) {
+          html = $(html).replaceWith(neoHtml[0]).html();
+        } else {
+          alert("埋め込みエラー");
+          html = $(html).replaceWith(orgHtml[0]);
+        }
+      }
       return html;
     }
-    function makeHtml(html, editor, replaceHtml, tag) {
+    function makeHtml2(html, editor, replaceHtml, tag) {
       if (html.indexOf(replaceHtml) > 0) {
         let rawHtml = editor.getContent({ format: "raw" });
         let start = rawHtml.indexOf("<" + tag);
@@ -170,8 +191,9 @@ export class TinyComponent implements OnInit {
           html = html.replace(replaceHtml, "");
         }
       }
-      return html;
+      return html.replace("\n", "");
     }
+
     /*
     function makeHtml(editor, replaceHtml, tag) {
       var html = editor.getContent({ format: "html" });
@@ -200,36 +222,49 @@ export class TinyComponent implements OnInit {
     return "'" + y + "-" + m + "-" + d + " " + h + ":" + min + ":" + sec + "'";
   }
   save() {
-    var sql = ""; var maxid = 0; var i = 0; const rid = this.rid;
-    $("#wrap div").each(function () {
+    var sql = ""; const rid = this.rid;
+    const storys = this.storys; const orgStorys = JSON.parse(this.orgStorys);
+    var maxid = Math.max(...orgStorys.map(story => story.id));
+    for (let i = orgStorys.length; i < storys.length; i++) {
+      if (storys[i].txt !== null) {
+        let id = maxid + i - orgStorys.length + 1;
+        sql += "INSERT INTO t21story (rid,id,idx,txt,upd) VALUES (" + rid + "," + id + "," + i + ",'" +
+          storys[i].txt + "'," + this.dateFormat() + ");\n";
+      }
+    }
+    for (let i = 0; i < orgStorys.length; i++) {
+      if (storys[i].txt != orgStorys[i].txt) {
+        if (storys[i].txt === null) {
+          sql += "DELETE FROM t21story WHERE rid=" + rid + " AND id=" + storys[i].id + ";\n";
+        } else {
+          sql += "UPDATE t21story SET txt='" + storys[i].txt + "',rev=" + this.dateFormat() +
+            " WHERE rid=" + rid + " AND id=" + storys[i].id + ";\n";
+        }
+      }
+    }
+    var i = 0;
+    $(".tiny").each(function () {
       let id = Number($(this).attr('id').replace("tiny", ""));
       if (id != i) {
-        sql += "UPDATE t21story SET idx=" + id + " WHERE rid=" + rid + " AND idx=" + i + ";\n";
+        sql += "UPDATE t21story SET idx=" + i + " WHERE rid=" + rid + " AND id=" + storys[id].id + ";\n";
       }
       i++;
     });
-    const storys = JSON.parse(this.orgStorys);
-    for (let i = 0; i < storys.length; i++) {
-      if (this.storys[i].txt != storys[i].txt) {
-        if (this.storys[i].txt === null) {
-          sql += "DELETE FROM t21story WHERE rid=" + rid + " AND id=" + this.storys[i].id + ";\n";
-        } else {
-          sql += "UPDATE t21story SET txt='" + this.storys[i].txt + "',rev=" + this.dateFormat() + " WHERE rid=" + rid + " AND id=" + i + ";\n";
-        }
-      }
-      maxid = (maxid < this.storys[i].id) ? this.storys[i].id : maxid;
-    }
-    for (let i = storys.length; i < this.storys.length; i++) {
-      let id = maxid + i - storys.length + 1;
-      sql += "INSERT INTO t21story (rid,id,idx,txt,upd) VALUES (" + rid + "," + id + "," + i + ",'" + this.storys[i].txt + "'," + this.dateFormat() + ");\n";
-    }
     console.log(sql);
+    if (sql) {
+      this.mysql.query("owner/save.php", { sql: sql.substr(0, sql.length - 1) }).subscribe((res: any) => {
+        if (res.msg !== "ok") {
+          alert("データベースエラーにより保存できませんでした。");
+        }
+      });
+    }
   }
-  next() {
+  newrow() {
     let idx = this.storys.length;
-    $("#wrap").append('<div id="tiny' + idx + '" class="tiny mce-content-body" contenteditable="true" style="position: relative;" spellcheck="false">新しい行</div>');
-    $("form").append('<input id="row' + idx + '" type="hidden"></input>');
+    $("#wrap").append('<div id="row' + idx + '" class="row"><div id="tiny' + idx +
+      '" class="tiny mce-content-body" contenteditable="true" style="position: relative;" spellcheck="false">新しい行</div>' +
+      '<div id="media' + idx + '" class="media">新しいメディア</div></div>');
     this.tiny(idx);
-    this.storys.push({ id: Math.max(...this.storys.map(story => story.id)) + 1, idx: idx, txt: "" });
+    this.storys.push({ id: Math.max(...this.storys.map(story => story.id)) + 1, txt: "", media: "" });
   }
 }

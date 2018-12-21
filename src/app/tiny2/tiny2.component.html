@@ -1,0 +1,16 @@
+<div id="wrap">
+  <ng-container *ngFor="let story of storys;index as i">
+    <div fxLayout="row" [id]="i" class="row">
+      <div fxFlex class="tiny" [innerHtml]="story.txt | safe: 'html'"></div>
+      <div fxFlex="30">
+        <div class="media" [id]="'media' + story.id" [innerHtml]="story.media">
+        </div>
+        <input class="url" type="text"> <input type="file" value="ファイルを選択">
+        <editor [init]="tinyInit"></editor>
+      </div>
+    </div>
+  </ng-container>
+</div>
+<button (click)="newrow()">新規</button>
+<button (click)="save()">保存</button>
+<canvas></canvas>
