@@ -13,6 +13,7 @@ export class Tiny2Component implements OnInit {
   edits = [];
   storyLength: number;
   storyMaxid: number;
+  contextMenu = null;
   tinyInit = {
     selector: ".tiny",
     menubar: false,
@@ -20,15 +21,15 @@ export class Tiny2Component implements OnInit {
     theme: 'inlite',
     language_url: 'https://bloggersguild.cf/js/ja.js',
     plugins: [
-      'autolink', 'codesample', 'contextmenu', 'link', 'lists', 'table', 'textcolor', 'image', 'imagetools', 'media'
+      'autolink', 'autosave', 'codesample', 'contextmenu', 'link', 'lists', 'table', 'textcolor', 'image', 'imagetools', 'media', 'paste'
     ],
     toolbar: [
       'undo redo | bold italic underline | fontselect fontsizeselect',
-      'forecolor backcolor | alignleft aligncenter alignright alignfull | link unlink | numlist bullist outdent indent'
+      'forecolor backcolor | alignleft aligncenter alignright alignfull | link unlink | numlist bullist outdent indent | copy paste'
     ],
     insert_toolbar: 'quicktable image media',
-    selection_toolbar: 'forecolor backcolor | fontselect fontsizeselect | bold italic | h2 h3 | blockquote quicklink',
-    contextmenu: 'image media tweet inserttable | cell row column deletetable | undo redo | del up down',
+    selection_toolbar: 'forecolor backcolor | fontselect fontsizeselect | bold italic | h2 h3 | blockquote quicklink copy paste',
+    contextmenu: 'image media tweet inserttable | cell row column deletetable | undo redo | paste up down restoredraft del',
     forced_root_block: false, allow_conditional_comments: true, allow_html_in_named_anchor: true, allow_unsafe_link_target: true,
     extended_valid_elements: "twitter-widget[class|id|data-tweet-id|style]",//"*[*]",//"ngx-tweet[tweetId]",
     setup: (editor) => { // オリジナルのプラグインボタンの追加 
@@ -84,34 +85,47 @@ export class Tiny2Component implements OnInit {
     $(document).on('dragover', function (e) {
       e.stopPropagation();
       e.preventDefault();
-      $(".media").css('border', '2px dotted #0B85A1');
+      //$(".media").css('border', '2px dotted #0B85A1');
     });
     $(document).on('drop', function (e) {
       e.stopPropagation();
       e.preventDefault();
     });
   }
-  ngAfterViewChecked() {
-    $(".media").on('dragenter', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      $(e.target).css('border', '2px solid #0B85A1');
-    });
-    $(".media").on('dragover', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-    });
-    $(".media").on('drop', (e) => {
-      $(e.target).css('border', '2px dotted #0B85A1');
-      e.preventDefault();
-      this.upload(e.originalEvent.dataTransfer.files, e.target);
-    });
-    $('input[type=file]').on('change', (e) => {
-      this.upload($(e.target).prop('files'), $(e.target).prevAll('.media'));
-    });
-    $('input[type=text]').on('change', (e) => {
-      this.flame($(e.target).val(), $(e.target).prevAll('.media'));
-    });
+  dragenter(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    $(e.target).css('border', '2px solid #0B85A1');
+  }
+  dragover(e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  drop(e) {
+    let media = e.target;
+    e.preventDefault();
+    if (media.className !== "media") {
+      media = $(media).parents(".media");
+    }
+    if (media) {
+      $(media).css('border', '2px dotted #0B85A1');
+      this.upload(e.dataTransfer.files, media);
+    }
+  }
+  context(e) {
+    let media = e.target;
+    e.stopPropagation();
+    e.preventDefault();
+    if (media.className !== "media") {
+      media = $(media).parents(".media");
+    }
+    this.contextMenu = this.contextMenu ? null : { media: media, x: e.pageX, y: e.pageY };
+  }
+  fileup(e) {
+    this.upload(e.target.files, this.contextMenu.media);//$(e.target).prevAll('.media'));
+  }
+  urlup(e) {
+    this.flame(e.target.value, this.contextMenu.media);//$(e.target).prevAll('.media'));
   }
   newrow() {
     this.storys.push({ id: Math.max(...this.storys.map(story => story.id)) + 1, txt: "新しい行", media: "" });
@@ -140,6 +154,9 @@ export class Tiny2Component implements OnInit {
   upload(files, media) {
     var rid = this.rid.toString();
     if (!files.length) return;
+    var rowCount = 0;
+    var status = new createStatusbar(media); //Using this we can set progress.
+    status.setFileNameSize(files[0].name, files[0].size);
     if (files[0].type.match(/image.*/)) {
       var canvas = document.querySelector('canvas');
       var ctx = canvas.getContext('2d');
@@ -148,42 +165,68 @@ export class Tiny2Component implements OnInit {
       reader.onload = () => {
         img.onload = () => {
           let h = 480;
-          //for (let h = 480; h > 0; h = h - 368) {
           let w = img.width * (h / img.height);
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           canvas.width = w; canvas.height = h;
           ctx.drawImage(img, 0, 0, w, h);
-          //canvas.toBlob(send, 'image/jpeg', h = 480 ? 1.0 : 0.5);
-          //}
+          canvas.toBlob(send, 'image/jpeg');
         }
-        img.src = <string>reader.result;//URL.createObjectURL(files[0]);
-        //var status = new createStatusbar(media);
-        //status.setFileNameSize(files[0].name, files[0].size);
+        img.src = <string>reader.result;
       }
       reader.readAsDataURL(files[0]);
-      var rowCount = 0;
     } else {
-      alert("写真ファイルではありません。");
+      send(files[0]);
     }
-    function send(blob) {
+    function send(file) {
+      var id = $(media).attr('id');
       var fd = new FormData();
       fd.append('rid', rid);
-      fd.append('id', $(media).attr('id'));
-      fd.append('file', blob);
-      $.ajax({
+      fd.append('id', id);
+      fd.append('file', file);
+      var jqXHR = $.ajax({
+        xhr: function () {
+          var xhrobj = $.ajaxSettings.xhr();
+          if (xhrobj.upload) {
+            xhrobj.upload.addEventListener('progress', function (event) {
+              var percent = 0;
+              var position = event.loaded || event.position;
+              var total = event.total;
+              if (event.lengthComputable) {
+                percent = Math.ceil(position / total * 100);
+              }
+              status.setProgress(percent);
+            }, false);
+          }
+          return xhrobj;
+        },
         url: "http://localhost/public_html/upload.php",
-        type: 'POST',
-        dataType: 'json',
-        data: fd,
+        type: "POST",
+        contentType: false,
         processData: false,
-        contentType: false
-      })
-        .done(function (data, textStatus, jqXHR) {
-          $(media).html('<img src="http://localhost/public_html/img/' + rid + '/' + $(media).attr('id') + '.jpg">');
-        })
-        .fail(function (jqXHR, textStatus, error) {
-          console.error("error" + error.message);
-        });
+        cache: false,
+        data: fd,
+        success: function (data) {
+          status.setProgress(100);
+          var res = JSON.parse(data);
+          if (res.err === undefined) {
+            let src = '="http://localhost/public_html/media/' + rid + '/' + id + '.' + res.ext + '?' + new Date().getTime();
+            if (res.typ === "img") {
+              $(media).html('<img src' + src + '">');
+            } else if (res.typ === "audio") {
+              $(media).html('<audio src' + src + '" controls>');
+            } else if (res.typ === "video") {
+              $(media).html('<video src' + src + '" controls>');
+            } else {
+              $(media).html('<a href' + src + '" download="' + id + '.' + res.ext + '">ダウンロード</a>');
+            }
+          } else {
+            alert(res.err);
+          }
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+          alert("ajax通信に失敗しました。");
+        }
+      });
     }
     function createStatusbar(obj) {
       rowCount++;
@@ -194,8 +237,7 @@ export class Tiny2Component implements OnInit {
       this.size = $("<div class='filesize'></div>").appendTo(this.statusbar);
       this.progressBar = $("<div class='progressBar'><div></div></div>").appendTo(this.statusbar);
       this.abort = $("<div class='abort'>Abort</div>").appendTo(this.statusbar);
-      obj.after(this.statusbar);
-
+      $(obj).children().replaceWith(this.statusbar);
       this.setFileNameSize = function (name, size) {
         var sizeStr = "";
         var sizeKB = size / 1024;
