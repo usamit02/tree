@@ -1,10 +1,11 @@
 <div id="wrap">
   <ng-container *ngFor="let story of storys;index as i">
-    <div style="display:flex;" [id]="i" class="row">
-      <div class="tiny" [innerHtml]="story.txt | safe: 'html'"></div>
+    <div style="display:flex;" [id]="i" class="row" draggable="true" (dragstart)="dragstart($event)" (dragenter)="dragentertxt($event)"
+      (dragover)="dragover($event)" (drop)="droptxt($event)" (dragend)="dragend()">
+      <div class=" tiny" [innerHtml]="story.txt | safe: 'html'"></div>
       <div>
         <div class="media" [id]="'media' + story.id" [innerHtml]="story.media" (dragenter)="dragenter($event)"
-          (dragover)="dragover($event)" (drop)="drop($event)" (contextmenu)="context($event)">
+          (dragover)="dragover($event)" (drop)="dropmedia($event)" draggable="false" (contextmenu)="context($event)">
         </div>
         <editor [init]="tinyInit"></editor>
       </div>
@@ -16,12 +17,12 @@
 <canvas style='display:none;'></canvas>
 <div class="menu" *ngIf="contextMenu" [style.left.px]="contextMenu.x" [style.top.px]="contextMenu.y">
   <ul>
-    <li><input class="url" type="text" placeholder="twitterやyoutubeのurl" (change)="urlup($event)"></li>
-    <p>または</p>
+    <li><input class="url" type="text" placeholder="twitterやyoutubeのurl" (change)="urlup($event)"><button (click)="urlup($event)">適用</button></li>
     <li><input type="file" value="ファイルを選択" (change)="fileup($event)"></li>
+    <li><button (click)="mediaDel($event)">削　除</button></li>
   </ul>
 </div>
-
+<blockquote class="twitter-tweet" data-conversation="none"><a href="https://twitter.com/sekainomakita55/status/1073062280277909504"></a></blockquote>
 <!--
  <div fxLayout="row" [id]="i" class="row">
       <div fxFlex class="tiny" [innerHtml]="story.txt | safe: 'html'"></div>

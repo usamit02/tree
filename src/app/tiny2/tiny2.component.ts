@@ -14,6 +14,7 @@ export class Tiny2Component implements OnInit {
   storyLength: number;
   storyMaxid: number;
   contextMenu = null;
+  drag = null;
   tinyInit = {
     selector: ".tiny",
     menubar: false,
@@ -74,9 +75,10 @@ export class Tiny2Component implements OnInit {
   }
   ngOnInit() {
     this.mysql.query("owner/story.php", { rid: this.rid }).subscribe((storys: any) => {
-      this.storys = storys;
       this.storyLength = storys.length;
       this.storyMaxid = Math.max(...storys.map(story => story.id));
+      this.storys = storys;
+      this.storys.push({ id: this.storyMaxid + 1, txt: "新しい行", media: 'ファイルをドロップ<br>または<br>右クリック' });
     });
     $(document).on('dragenter', function (e) {
       e.stopPropagation();
@@ -85,7 +87,7 @@ export class Tiny2Component implements OnInit {
     $(document).on('dragover', function (e) {
       e.stopPropagation();
       e.preventDefault();
-      //$(".media").css('border', '2px dotted #0B85A1');
+      $(".media").css('border', '2px dotted #0B85A1');
     });
     $(document).on('drop', function (e) {
       e.stopPropagation();
@@ -95,22 +97,50 @@ export class Tiny2Component implements OnInit {
   dragenter(e) {
     e.stopPropagation();
     e.preventDefault();
-    $(e.target).css('border', '2px solid #0B85A1');
+    $(e.currentTarget).css('border', '2px solid #0B85A1');
   }
   dragover(e) {
     e.stopPropagation();
     e.preventDefault();
-  }
-  drop(e) {
-    let media = e.target;
-    e.preventDefault();
-    if (media.className !== "media") {
-      media = $(media).parents(".media");
+    if (e.currentTarget.className === "row") {
+      $(e.currentTarget).css('border', '1px solid lightgray');
     }
-    if (media) {
+  }
+  dragstart(e) {
+    this.drag = e.currentTarget;
+  }
+  dragentertxt(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (this.drag && e.currentTarget.className === "row" && this.drag.id !== e.currentTarget.id) {
+      $(e.currentTarget).css('border', '2px solid #0B85A1');
+    }
+  }
+  dropmedia(e) {
+    let media = e.currentTarget;
+    e.preventDefault();
+    if (media.className === "media") {
       $(media).css('border', '2px dotted #0B85A1');
       this.upload(e.dataTransfer.files, media);
     }
+  }
+  droptxt(e) {
+    let drop = e.currentTarget;
+    e.preventDefault();
+    if (this.drag && drop.className === "row") {
+      if ($("#" + this.drag.id).prev().attr('id') === drop.id) {
+        $("#" + drop.id).before($("#" + this.drag.id));
+      } else {
+        $("#" + drop.id).after($("#" + this.drag.id));
+      }
+    }
+    $(".row").css('border', '1px solid lightgray');
+    $(".media").css('border', '2px dotted #0B85A1');
+  }
+  dragend() {
+    let fix = $("#" + this.drag.id).children(".row");
+    if (fix) fix.className = "media";
+    this.drag = null;
   }
   context(e) {
     let media = e.target;
@@ -123,19 +153,28 @@ export class Tiny2Component implements OnInit {
   }
   fileup(e) {
     this.upload(e.target.files, this.contextMenu.media);//$(e.target).prevAll('.media'));
+    this.contextMenu = null;
   }
   urlup(e) {
-    this.flame(e.target.value, this.contextMenu.media);//$(e.target).prevAll('.media'));
+    this.getMedia(e.target.value, this.contextMenu.media);//$(e.target).prevAll('.media'));
+    this.contextMenu = null;
+  }
+  mediaDel(e) {
+    $(this.contextMenu.media).html("");
+    this.contextMenu = null;
   }
   newrow() {
     this.storys.push({ id: Math.max(...this.storys.map(story => story.id)) + 1, txt: "新しい行", media: "" });
   }
-  flame(html, media) {
+  getMedia(html, media) {
     if (!html) return;
     if (html.indexOf("twitter.com") > 0) {
-      let id = html.match("twitter.com/[0-9a-zA-Z_]{1,15}/status(?:es)?/([0-9]{19})");
+      let id = html.match("twitter.com/[0-9a-zA-Z_]{1,15}/status(?:es)?/[0-9]{19}");
       if (id && id.length) {
-        $(media).html('<ngx-tweet tweeId="' + id[1] + '"></ngx-tweet>');
+        $(media).html('<blockquote class="twitter-tweet" data-conversation="none"><a href="https://' +
+          id[0] + '"></a></blockquote>');
+        //$(media).html('<ngx-tweet tweeId="' + id[1] + '"></ngx-tweet>');
+        twttr.widgets.load();
       } else {
         alert("twitterのurlを解析できませんでした。");
       }
@@ -148,7 +187,7 @@ export class Tiny2Component implements OnInit {
         alert("youtubeのurlを解析できませんでした。");
       }
     } else {
-
+      alert("twitterかyoutubeのurlを入力してください。");
     }
   }
   upload(files, media) {

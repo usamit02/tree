@@ -17,7 +17,6 @@ import { HomeComponent } from './home/home.component';
 import { MemberComponent } from './member/member.component';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { TinyComponent } from './tiny/tiny.component';
-import { NgxTweetModule } from "ngx-tweet";
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { SafePipe } from './safe.pipe';
 import { Tiny2Component } from './tiny2/tiny2.component';
@@ -55,7 +54,6 @@ import { EditorModule } from '@tinymce/tinymce-angular';
     FormsModule,
     ReactiveFormsModule,
     CKEditorModule,
-    NgxTweetModule,
     FlexLayoutModule,
     EditorModule
   ],

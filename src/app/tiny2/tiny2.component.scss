@@ -3,10 +3,8 @@
 min-width:100px;
 min-height: 30px;
 color:#92AAB0;
-text-align:left;vertical-align:middle;
+text-align:center;vertical-align:middle;
 padding:10px 10px 10 10px;
-margin-bottom:10px;
-font-size:200%;
 }
 .progressBar {
   width: 200px;
@@ -77,4 +75,7 @@ font-size:200%;
   padding: 7px;
   border-radius: 5px;
   box-shadow: 0 0 2px 2px rgba(0,0,0,0.2);
+}
+.row{
+  border:1px solid lightgray;
 }
