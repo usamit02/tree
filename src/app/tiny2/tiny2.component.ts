@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MysqlService } from '../service/mysql.service';
-declare var $;
-declare var twttr;
+declare var $; declare var twttr; declare var tinymce;
 @Component({
   selector: 'app-tiny2',
   templateUrl: './tiny2.component.html',
@@ -10,12 +9,15 @@ declare var twttr;
 export class Tiny2Component implements OnInit {
   rid = 1002;//@input() rid:number;
   storys = [];
-  edits = [];
+  txts = [];
+  medias = [];
   storyLength: number;
   storyMaxid: number;
   contextMenu = null;
   drag = null;
-  tinyInit = {
+  newTxt = "新しい段落";
+  newMedia = "ファイルをドロップ<br>または<br>右クリック";
+  tinyinit = {
     selector: ".tiny",
     menubar: false,
     inline: true,
@@ -49,7 +51,7 @@ export class Tiny2Component implements OnInit {
       editor.on('blur', (e) => {
         if ($("#" + editor.id).parent().css('display') !== 'none') {
           let html = makeStory(editor);
-          this.edits[editor.id] = html;
+          if (html != this.newTxt) this.txts[editor.id] = html;
           console.log(editor.id + ":" + html);
         }
       });
@@ -74,12 +76,7 @@ export class Tiny2Component implements OnInit {
   constructor(private mysql: MysqlService) {
   }
   ngOnInit() {
-    this.mysql.query("owner/story.php", { rid: this.rid }).subscribe((storys: any) => {
-      this.storyLength = storys.length;
-      this.storyMaxid = Math.max(...storys.map(story => story.id));
-      this.storys = storys;
-      this.storys.push({ id: this.storyMaxid + 1, txt: "新しい行", media: 'ファイルをドロップ<br>または<br>右クリック' });
-    });
+    this.load();
     $(document).on('dragenter', function (e) {
       e.stopPropagation();
       e.preventDefault();
@@ -92,6 +89,18 @@ export class Tiny2Component implements OnInit {
     $(document).on('drop', function (e) {
       e.stopPropagation();
       e.preventDefault();
+    });
+  }
+  load() {
+    this.mysql.query("owner/story.php", { rid: this.rid }).subscribe((storys: any) => {
+      this.storyLength = storys.length;
+      this.storyMaxid = Math.max(...storys.map(story => story.id));
+      this.storys = storys;
+      this.storys.push({ id: this.storyMaxid + 1, txt: this.newTxt, media: this.newMedia });
+      setTimeout(() => {
+        twttr.widgets.load();
+        tinymce.init(this.tinyinit);
+      });
     });
   }
   dragenter(e) {
@@ -143,7 +152,7 @@ export class Tiny2Component implements OnInit {
     this.drag = null;
   }
   context(e) {
-    let media = e.target;
+    let media = e.currentTarget;
     e.stopPropagation();
     e.preventDefault();
     if (media.className !== "media") {
@@ -160,21 +169,26 @@ export class Tiny2Component implements OnInit {
     this.contextMenu = null;
   }
   mediaDel(e) {
-    $(this.contextMenu.media).html("");
+    let media = this.contextMenu.media;
+    media.innerHTML = "";
+    this.medias[media.id] = "";
     this.contextMenu = null;
   }
   newrow() {
-    this.storys.push({ id: Math.max(...this.storys.map(story => story.id)) + 1, txt: "新しい行", media: "" });
+    this.storys.push({ id: Math.max(...this.storys.map(story => story.id)) + 1, txt: this.newTxt, media: this.newMedia });
+    setTimeout(() => {
+      tinymce.init(this.tinyinit);
+    });
   }
   getMedia(html, media) {
     if (!html) return;
     if (html.indexOf("twitter.com") > 0) {
-      let id = html.match("twitter.com/[0-9a-zA-Z_]{1,15}/status(?:es)?/[0-9]{19}");
-      if (id && id.length) {
-        $(media).html('<blockquote class="twitter-tweet" data-conversation="none"><a href="https://' +
-          id[0] + '"></a></blockquote>');
-        //$(media).html('<ngx-tweet tweeId="' + id[1] + '"></ngx-tweet>');
+      let url = html.match("twitter.com/[0-9a-zA-Z_]{1,15}/status(?:es)?/[0-9]{19}");
+      if (url && url.length) {
+        let tweet = '<blockquote class="twitter-tweet" data-conversation="none"><a href="https://' + url[0] + '"></a></blockquote>';
+        $(media).html(tweet);
         twttr.widgets.load();
+        this.medias[media.id] = tweet;
       } else {
         alert("twitterのurlを解析できませんでした。");
       }
@@ -182,7 +196,9 @@ export class Tiny2Component implements OnInit {
       let id = html.match('[\/?=]([a-zA-Z0-9\-_]{11})');
       if (id && id.length) {
         let tag = '<img src="http://i.ytimg.com/vi/' + id[1] + '/sddefault.jpg">';
-        $(media).html('<a href="https://youtube.com/watch?v=' + id[1] + '" target="_blank">' + tag + '</a>');
+        let youtube = '<a href="https://youtube.com/watch?v=' + id[1] + '" target="_blank">' + tag + '</a>';
+        $(media).html(youtube);
+        this.medias[media.id] = youtube;
       } else {
         alert("youtubeのurlを解析できませんでした。");
       }
@@ -190,9 +206,11 @@ export class Tiny2Component implements OnInit {
       alert("twitterかyoutubeのurlを入力してください。");
     }
   }
+
   upload(files, media) {
     var rid = this.rid.toString();
     if (!files.length) return;
+    var medias = this.medias;
     var rowCount = 0;
     var status = new createStatusbar(media); //Using this we can set progress.
     status.setFileNameSize(files[0].name, files[0].size);
@@ -217,13 +235,12 @@ export class Tiny2Component implements OnInit {
       send(files[0]);
     }
     function send(file) {
-      var id = $(media).attr('id');
       var fd = new FormData();
       fd.append('rid', rid);
-      fd.append('id', id);
+      fd.append('id', media.id);
       fd.append('file', file);
       var jqXHR = $.ajax({
-        xhr: function () {
+        xhr: () => {
           var xhrobj = $.ajaxSettings.xhr();
           if (xhrobj.upload) {
             xhrobj.upload.addEventListener('progress', function (event) {
@@ -244,25 +261,28 @@ export class Tiny2Component implements OnInit {
         processData: false,
         cache: false,
         data: fd,
-        success: function (data) {
+        success: (data) => {
           status.setProgress(100);
           var res = JSON.parse(data);
           if (res.err === undefined) {
-            let src = '="http://localhost/public_html/media/' + rid + '/' + id + '.' + res.ext + '?' + new Date().getTime();
+            let html: string;
+            let src = '="http://localhost/public_html/media/' + rid + '/' + media.id + '.' + res.ext + '?' + new Date().getTime();
             if (res.typ === "img") {
-              $(media).html('<img src' + src + '">');
+              html = '<img src' + src + '">';
             } else if (res.typ === "audio") {
-              $(media).html('<audio src' + src + '" controls>');
+              html = '<audio src' + src + '" controls>';
             } else if (res.typ === "video") {
-              $(media).html('<video src' + src + '" controls>');
+              html = '<video src' + src + '" controls>';
             } else {
-              $(media).html('<a href' + src + '" download="' + id + '.' + res.ext + '">ダウンロード</a>');
+              html = '<a href' + src + '" download="' + media.id + '.' + res.ext + '">ダウンロード</a>';
             }
+            media.innerHTML = html;
+            medias[media.id] = html;
           } else {
             alert(res.err);
           }
         },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
+        error: (XMLHttpRequest, textStatus, errorThrown) => {
           alert("ajax通信に失敗しました。");
         }
       });
@@ -316,27 +336,45 @@ export class Tiny2Component implements OnInit {
     return "'" + y + "-" + m + "-" + d + " " + h + ":" + min + ":" + sec + "'";
   }
   save() {
-    var sql = ""; const rid = this.rid; const storys = this.storys; const edits = this.edits;
-    var i = 0;
+    const rid = this.rid, storys = this.storys, txts = this.txts, medias = this.medias;
+    var i = 0, sql = "", reload = false, newStoryLength = 0;
     $(".row").each((index, row) => {
-      let idx = Number($(row).attr('id'));
-      let mceId = $(row).children(".tiny").attr('id');
+      const idx = Number($(row).attr('id'));
+      const mceId = $(row).children(".tiny").attr('id');
       if ($(row).css('display') === 'none') {
         if (idx < this.storyLength) {
           sql += "DELETE FROM t21story WHERE rid=" + rid + " AND id=" + storys[idx].id + ";\n";
+          reload = true;
         }
       } else {
-        if (idx >= this.storyLength && edits[mceId] !== undefined) {
-          let id = this.storyMaxid + idx - this.storyLength + 1;
-          sql += "INSERT INTO t21story (rid,id,idx,txt,upd) VALUES (" + rid + "," + id + "," + i + ",'" +
-            edits[mceId] + "'," + this.dateFormat() + ");\n";
+        const mediaId = $(row).find(".media").attr('id');
+        if (idx >= this.storyLength) {
+          if (!(txts[mceId] === undefined && medias[mediaId] === undefined)) {
+            let id: number = this.storyMaxid + idx - this.storyLength + 1;
+            let txt = txts[mceId] === undefined ? "" : txts[mceId];
+            let media = medias[mediaId] === undefined ? "" : medias[mediaId];
+            sql += "INSERT INTO t21story (rid,id,idx,txt,media,upd) VALUES (" + rid + "," + id + "," + i + ",'" +
+              txt + "','" + media + "'," + this.dateFormat() + ");\n";
+            newStoryLength++;
+          }
         } else {
-          if (edits[mceId] !== undefined && storys[idx].txt != edits[mceId]) {
-            sql += "UPDATE t21story SET txt='" + edits[mceId] + "',rev=" + this.dateFormat() +
+          if (txts[mceId] !== undefined && storys[idx].txt != txts[mceId]) {
+            sql += "UPDATE t21story SET txt='" + txts[mceId] + "',rev=" + this.dateFormat() +
+              " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";\n";
+          }
+          if (medias[mediaId] !== undefined) {
+            /*  let id = $(row).find(".media").attr('id');
+              if (this.medias[id]) {
+                media = this.medias[id];//ツイッターが変更されていればキャッシュと入れ替える
+              } else if (media.indexOf("twitter-tweet-rendered")) {
+                media = storys[idx].media;//ツイッターが変更されていなければtwttr.widgets.load()前に戻す
+              } */
+            sql += "UPDATE t21story SET media='" + medias[mediaId] + "',rev=" + this.dateFormat() +
               " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";\n";
           }
           if (idx !== i) {
             sql += "UPDATE t21story SET idx=" + i + " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";\n";
+            reload = true;
           }
         }
         i++;
@@ -345,8 +383,11 @@ export class Tiny2Component implements OnInit {
     console.log(sql);
     if (sql) {
       this.mysql.query("owner/save.php", { sql: sql.substr(0, sql.length - 1) }).subscribe((res: any) => {
-        if (res.msg !== "ok") {
-          alert("データベースエラーにより保存できませんでした。");
+        if (res.msg === "ok") {
+          this.txts = []; this.medias = []; this.storyLength += newStoryLength;
+          if (reload) this.load();
+        } else {
+          alert("データベースエラーにより保存できませんでした。\n" + res.msg);
         }
       });
     }

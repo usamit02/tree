@@ -2,16 +2,20 @@
   <ng-container *ngFor="let story of storys;index as i">
     <div style="display:flex;" [id]="i" class="row" draggable="true" (dragstart)="dragstart($event)" (dragenter)="dragentertxt($event)"
       (dragover)="dragover($event)" (drop)="droptxt($event)" (dragend)="dragend()">
-      <div class=" tiny" [innerHtml]="story.txt | safe: 'html'"></div>
       <div>
         <div class="media" [id]="'media' + story.id" [innerHtml]="story.media" (dragenter)="dragenter($event)"
           (dragover)="dragover($event)" (drop)="dropmedia($event)" draggable="false" (contextmenu)="context($event)">
         </div>
-        <editor [init]="tinyInit"></editor>
+        <!--  <editor [init]="tinyInit"></editor>-->
       </div>
+
+      <div class=" tiny" [innerHtml]="story.txt | safe: 'html'"></div>
+
+
     </div>
   </ng-container>
 </div>
+
 <button (click)="newrow()">新規</button>
 <button (click)="save()">保存</button>
 <canvas style='display:none;'></canvas>
@@ -22,7 +26,6 @@
     <li><button (click)="mediaDel($event)">削　除</button></li>
   </ul>
 </div>
-<blockquote class="twitter-tweet" data-conversation="none"><a href="https://twitter.com/sekainomakita55/status/1073062280277909504"></a></blockquote>
 <!--
  <div fxLayout="row" [id]="i" class="row">
       <div fxFlex class="tiny" [innerHtml]="story.txt | safe: 'html'"></div>
