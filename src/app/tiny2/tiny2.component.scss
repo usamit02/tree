@@ -79,3 +79,9 @@ padding:10px 10px 10 10px;
 .row{
   border:1px solid lightgray;
 }
+.pay{
+  border:1px solid green;
+}
+@media screen and (min-width: 999px) {
+  .row{display:flex;}
+ }

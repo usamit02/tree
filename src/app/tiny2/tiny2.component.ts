@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { MysqlService } from '../service/mysql.service';
 declare var $; declare var twttr; declare var tinymce;
 @Component({
@@ -7,10 +7,11 @@ declare var $; declare var twttr; declare var tinymce;
   styleUrls: ['./tiny2.component.scss']
 })
 export class Tiny2Component implements OnInit {
-  rid = 1002;//@input() rid:number;
+  @Input() rid: number;
   storys = [];
   txts = [];
   medias = [];
+  pays = [];
   storyLength: number;
   storyMaxid: number;
   contextMenu = null;
@@ -26,27 +27,64 @@ export class Tiny2Component implements OnInit {
     plugins: [
       'autolink', 'autosave', 'codesample', 'contextmenu', 'link', 'lists', 'table', 'textcolor', 'image', 'imagetools', 'media', 'paste'
     ],
-    toolbar: [
-      'undo redo | bold italic underline | fontselect fontsizeselect',
-      'forecolor backcolor | alignleft aligncenter alignright alignfull | link unlink | numlist bullist outdent indent | copy paste'
-    ],
-    insert_toolbar: 'quicktable image media',
     selection_toolbar: 'forecolor backcolor | fontselect fontsizeselect | bold italic | h2 h3 | blockquote quicklink copy paste',
-    contextmenu: 'image media tweet inserttable | cell row column deletetable | undo redo | paste up down restoredraft del',
+    contextmenu: '| undo redo | paste up down restoredraft del | inserttable cell row column deletetable | paystart payend',
     forced_root_block: false, allow_conditional_comments: true, allow_html_in_named_anchor: true, allow_unsafe_link_target: true,
-    extended_valid_elements: "twitter-widget[class|id|data-tweet-id|style]",//"*[*]",//"ngx-tweet[tweetId]",
     setup: (editor) => { // オリジナルのプラグインボタンの追加 
       editor.addMenuItem('del', { //editor.addButton(contextmenu以外のmenu)
-        text: '行を削除',
+        text: '段落を削除',
         onclick: () => { $("#" + editor.id).parent().fadeOut(500); }
       });
       editor.addMenuItem('up', {
-        text: '行を上に移動',
+        text: '段落を上に移動',
         onclick: () => { updown(true, editor); }
       });
       editor.addMenuItem('down', {
-        text: '行を下に移動',
+        text: '段落を下に移動',
         onclick: () => { updown(false, editor); }
+      });
+      editor.addMenuItem('paystart', {
+        text: 'ここから有料',
+        onclick: () => {
+          const idx = $("#" + editor.id).parent().attr('id');
+          editor.windowManager.open({
+            title: '有料設定',
+            body: [
+              {
+                type: 'textbox',
+                size: 10,
+                height: '100px',
+                name: 'pay',
+                label: '価格',
+                value: this.storys[idx].pay
+              }
+            ],
+            onsubmit: (e) => {
+              let p = e.data.pay;
+              if (p >= 0 && p < 1000000 && this.storys[idx].pay != p) {
+                this.storys[idx].pay = p;
+                this.pays[idx] = p;
+              }
+            }
+          })
+        }
+      });
+      editor.addMenuItem('payend', {
+        text: 'ここまで有料',
+        onclick: () => {
+          const idx = $("#" + editor.id).parent().attr('id');
+          for (let i = idx; i >= 0; i--) {
+            if (this.storys[i].pay > 0) {
+              for (let j = i; j <= idx; j++) {
+                if (this.storys[j].pay != this.storys[i].pay) {
+                  this.storys[j].pay = this.storys[i].pay;
+                  this.pays[j] = this.storys[i].pay;
+                }
+              }
+              break;
+            }
+          }
+        }
       });
       editor.on('blur', (e) => {
         if ($("#" + editor.id).parent().css('display') !== 'none') {
@@ -67,8 +105,6 @@ export class Tiny2Component implements OnInit {
       }
       function makeStory(editor) {
         var html = editor.getContent({ format: "html" });
-        //html = makeHtml(html, editor, '<div class="tweet" contenteditable="false">&nbsp;</div>', 'twitter-widget');
-        //html = makeHtml(html, editor, 'div.tweet', 'twitter-widget');
         return html;
       }
     }
@@ -96,7 +132,7 @@ export class Tiny2Component implements OnInit {
       this.storyLength = storys.length;
       this.storyMaxid = Math.max(...storys.map(story => story.id));
       this.storys = storys;
-      this.storys.push({ id: this.storyMaxid + 1, txt: this.newTxt, media: this.newMedia });
+      this.storys.push({ id: this.storyMaxid + 1, txt: this.newTxt, media: this.newMedia, pay: 0 });
       setTimeout(() => {
         twttr.widgets.load();
         tinymce.init(this.tinyinit);
@@ -176,7 +212,6 @@ export class Tiny2Component implements OnInit {
   }
   newrow() {
     this.storys.push({ id: Math.max(...this.storys.map(story => story.id)) + 1, txt: this.newTxt, media: this.newMedia });
-    //this.storys.push({txt: this.newTxt, media: this.newMedia });
     setTimeout(() => {
       tinymce.init(this.tinyinit);
     });
@@ -207,7 +242,6 @@ export class Tiny2Component implements OnInit {
       alert("twitterかyoutubeのurlを入力してください。");
     }
   }
-
   upload(files, media) {
     var rid = this.rid.toString();
     if (!files.length) return;
@@ -275,7 +309,7 @@ export class Tiny2Component implements OnInit {
             } else if (res.typ === "video") {
               html = '<video src' + src + '" controls>';
             } else {
-              html = '<a href' + src + '" download="' + media.id + '.' + res.ext + '">ダウンロード</a>';
+              html = '<a href' + src + '" download="' + media.id + '.' + res.ext + '"><img src="img/downlord.jpg"></a>';
             }
             media.innerHTML = html;
             medias[media.id] = html;
@@ -337,7 +371,7 @@ export class Tiny2Component implements OnInit {
     return "'" + y + "-" + m + "-" + d + " " + h + ":" + min + ":" + sec + "'";
   }
   save() {
-    const rid = this.rid, storys = this.storys, txts = this.txts, medias = this.medias;
+    const rid = this.rid, storys = this.storys, txts = this.txts, medias = this.medias, pays = this.pays;
     var i = 0, sql = "", reload = false, newStoryLength = 0;
     $(".row").each((index, row) => {
       const idx = Number($(row).attr('id'));
@@ -350,13 +384,14 @@ export class Tiny2Component implements OnInit {
       } else {
         const mediaId = $(row).find(".media").attr('id');
         if (idx >= this.storyLength) {//新規行
-          if (txts[mceId] === undefined && medias[mediaId] === undefined) {
+          if (txts[mceId] === undefined && medias[mediaId] === undefined && pays[idx] === undefined) {
             reload = true;//新規行に変更ないときは消すためにリロード
           } else {//新規保存
             let txt = txts[mceId] === undefined ? "" : txts[mceId];
             let media = medias[mediaId] === undefined ? "" : medias[mediaId];
-            sql += "INSERT INTO t21story (rid,id,idx,txt,media,upd) VALUES (" + rid + "," + storys[idx].id +
-              "," + i + ",'" + txt + "','" + media + "'," + this.dateFormat() + ");;\r\n";
+            let pay = pays[idx] === undefined ? 0 : pays[idx];
+            sql += "INSERT INTO t21story (rid,id,idx,txt,media,pay,upd) VALUES (" + rid + "," + storys[idx].id +
+              "," + i + ",'" + txt + "','" + media + "'," + pay + "," + this.dateFormat() + ");;\r\n";
             newStoryLength++;
           }
         } else {//既存行
@@ -366,6 +401,10 @@ export class Tiny2Component implements OnInit {
           }
           if (medias[mediaId] !== undefined) {//メディアの変更
             sql += "UPDATE t21story SET media='" + medias[mediaId] + "',rev=" + this.dateFormat() +
+              " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";;\r\n";
+          }
+          if (pays[idx] !== undefined) {//有料の変更
+            sql += "UPDATE t21story SET pay='" + pays[idx] + "',rev=" + this.dateFormat() +
               " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";;\r\n";
           }
           if (idx !== i) {//順番の変更、要リロード

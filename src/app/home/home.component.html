@@ -23,6 +23,7 @@
   <p>This is some sample content.</p>
 </div>
 <textarea id="mytextarea">Hello, World!</textarea>
+<app-tiny2 *ngIf="room.contents" [rid]="room.id"></app-tiny2>
 <!--
  <label>紹介文　<textarea name="discription" cols="70" rows="5" [(ngModel)]="room.discription" placeholder="部屋の目的や活動内容など"
       #discription="ngModel"></textarea></label>

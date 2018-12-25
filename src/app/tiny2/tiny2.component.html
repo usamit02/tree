@@ -1,17 +1,13 @@
 <div id="wrap">
   <ng-container *ngFor="let story of storys;index as i">
-    <div style="display:flex;" [id]="i" class="row" draggable="true" (dragstart)="dragstart($event)" (dragenter)="dragentertxt($event)"
+    <div [id]="i" class="row" [class.pay]="story.pay > 0" draggable="true" (dragstart)="dragstart($event)" (dragenter)="dragentertxt($event)"
       (dragover)="dragover($event)" (drop)="droptxt($event)" (dragend)="dragend()">
       <div>
         <div class="media" [id]="'media' + story.id" [innerHtml]="story.media" (dragenter)="dragenter($event)"
           (dragover)="dragover($event)" (drop)="dropmedia($event)" draggable="false" (contextmenu)="context($event)">
         </div>
-        <!--  <editor [init]="tinyInit"></editor>-->
       </div>
-
       <div class=" tiny" [innerHtml]="story.txt | safe: 'html'"></div>
-
-
     </div>
   </ng-container>
 </div>
