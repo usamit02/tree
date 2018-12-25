@@ -176,6 +176,7 @@ export class Tiny2Component implements OnInit {
   }
   newrow() {
     this.storys.push({ id: Math.max(...this.storys.map(story => story.id)) + 1, txt: this.newTxt, media: this.newMedia });
+    //this.storys.push({txt: this.newTxt, media: this.newMedia });
     setTimeout(() => {
       tinymce.init(this.tinyinit);
     });
@@ -255,7 +256,7 @@ export class Tiny2Component implements OnInit {
           }
           return xhrobj;
         },
-        url: "http://localhost/public_html/upload.php",
+        url: "http://localhost/public_html/owner/upload.php",
         type: "POST",
         contentType: false,
         processData: false,
@@ -341,39 +342,34 @@ export class Tiny2Component implements OnInit {
     $(".row").each((index, row) => {
       const idx = Number($(row).attr('id'));
       const mceId = $(row).children(".tiny").attr('id');
-      if ($(row).css('display') === 'none') {
+      if ($(row).css('display') === 'none') {//削除行
         if (idx < this.storyLength) {
-          sql += "DELETE FROM t21story WHERE rid=" + rid + " AND id=" + storys[idx].id + ";\n";
+          sql += "DELETE FROM t21story WHERE rid=" + rid + " AND id=" + storys[idx].id + ";;\r\n";
           reload = true;
         }
       } else {
         const mediaId = $(row).find(".media").attr('id');
-        if (idx >= this.storyLength) {
-          if (!(txts[mceId] === undefined && medias[mediaId] === undefined)) {
-            let id: number = this.storyMaxid + idx - this.storyLength + 1;
+        if (idx >= this.storyLength) {//新規行
+          if (txts[mceId] === undefined && medias[mediaId] === undefined) {
+            reload = true;//新規行に変更ないときは消すためにリロード
+          } else {//新規保存
             let txt = txts[mceId] === undefined ? "" : txts[mceId];
             let media = medias[mediaId] === undefined ? "" : medias[mediaId];
-            sql += "INSERT INTO t21story (rid,id,idx,txt,media,upd) VALUES (" + rid + "," + id + "," + i + ",'" +
-              txt + "','" + media + "'," + this.dateFormat() + ");\n";
+            sql += "INSERT INTO t21story (rid,id,idx,txt,media,upd) VALUES (" + rid + "," + storys[idx].id +
+              "," + i + ",'" + txt + "','" + media + "'," + this.dateFormat() + ");;\r\n";
             newStoryLength++;
           }
-        } else {
-          if (txts[mceId] !== undefined && storys[idx].txt != txts[mceId]) {
+        } else {//既存行
+          if (txts[mceId] !== undefined && storys[idx].txt != txts[mceId]) {//テキストの変更
             sql += "UPDATE t21story SET txt='" + txts[mceId] + "',rev=" + this.dateFormat() +
-              " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";\n";
+              " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";;\r\n";
           }
-          if (medias[mediaId] !== undefined) {
-            /*  let id = $(row).find(".media").attr('id');
-              if (this.medias[id]) {
-                media = this.medias[id];//ツイッターが変更されていればキャッシュと入れ替える
-              } else if (media.indexOf("twitter-tweet-rendered")) {
-                media = storys[idx].media;//ツイッターが変更されていなければtwttr.widgets.load()前に戻す
-              } */
+          if (medias[mediaId] !== undefined) {//メディアの変更
             sql += "UPDATE t21story SET media='" + medias[mediaId] + "',rev=" + this.dateFormat() +
-              " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";\n";
+              " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";;\r\n";
           }
-          if (idx !== i) {
-            sql += "UPDATE t21story SET idx=" + i + " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";\n";
+          if (idx !== i) {//順番の変更、要リロード
+            sql += "UPDATE t21story SET idx=" + i + " WHERE rid=" + rid + " AND id=" + storys[idx].id + ";;\r\n";
             reload = true;
           }
         }
@@ -382,12 +378,15 @@ export class Tiny2Component implements OnInit {
     });
     console.log(sql);
     if (sql) {
-      this.mysql.query("owner/save.php", { sql: sql.substr(0, sql.length - 1) }).subscribe((res: any) => {
+      this.mysql.query("owner/story.php", { sql: sql.substr(0, sql.length - 1) }).subscribe((res: any) => {
         if (res.msg === "ok") {
           this.txts = []; this.medias = []; this.storyLength += newStoryLength;
           if (reload) this.load();
         } else {
-          alert("データベースエラーにより保存できませんでした。\n" + res.msg);
+          if (confirm("データベースエラーにより保存できませんでした。\n" + res.msg +
+            "\n\n編集中の内容は失われますがリロードしますか。\nリロード前に編集内容をメモ帳などにコピーをお勧めします。")) {
+            this.load();
+          };
         }
       });
     }
