@@ -42,9 +42,17 @@ export class TreeComponent implements OnInit {
           TREE_ACTIONS.TOGGLE_ACTIVE(tree, node, e);
         },
         drop: (tree: TreeModel, node: TreeNode, e: MouseEvent, { from, to }) => {
-          if (node.parent) {
-            tree.moveNode(from, { parent: node, index: to.index });
-            this.change = true;
+          if (node.parent && to.parent.data.auth >= 1000) {
+            if (from.data.auth >= 1000) {
+              tree.moveNode(from, { parent: node, index: to.index });
+              this.change = true;
+            } else {
+              if (confirm("「" + from.displayName + "」を移動する権限がありません。コピーしますか。")) {
+                tree.copyNode(from, { id: 999, parent: node, index: to.index });
+                this.change = true;
+              }
+            }
+
           } else {
             alert("権限がありません。");
           }
@@ -113,7 +121,7 @@ export class TreeComponent implements OnInit {
   }
   add = (tree) => {
     let node = this.contextMenu.node;
-    this.mysql.newNode(node.id).subscribe((data: any) => {
+    this.mysql.query("owner/room.php", { parent: node.id }).subscribe((data: any) => {
       if (data.maxId) {
         let room = new Room(data.maxId, node.id, "新しい部屋", 0);
         let rooms = JSON.parse(this.room);
@@ -123,7 +131,7 @@ export class TreeComponent implements OnInit {
         if (!node.data.children) node.data.children = [];
         node.data.children.push(room);
         tree.treeModel.update();
-        tree.treeModel.getNodeById(node.id).expandAll();
+        tree.treeModel.getNodeById(node.id).expand();
         let editNode = tree.treeModel.getNodeById(data.maxId);
         this.editNode = editNode;
       } else {
@@ -210,8 +218,8 @@ export class TreeComponent implements OnInit {
       sql += "DELETE FROM t01room WHERE id=" + rooms[i].id + ";\n";
     }
     console.log(sql);
-    this.mysql.saveNode(this.user.uid, sql.substr(0, sql.length - 1)).subscribe((data: any) => {
-      if (data.msg !== "ok") {
+    this.mysql.query("owner/room.php", { uid: this.user.uid, sql: sql.substr(0, sql.length - 1) }).subscribe((data: any) => {
+      if (data.msg === "ok") {
         this.change = false;
         this.getNode();
       } else {
@@ -225,36 +233,16 @@ export class TreeComponent implements OnInit {
     this.getNode();
   }
   public getNode() {
-    this.mysql.getNode(this.user.uid).subscribe((rooms: any) => {
-      this.room = JSON.stringify(rooms);
-      var authRooms = rooms.filter(room => { return room.auth !== null; });
-      var rootRooms = [];
-      for (let i = 0; i < authRooms.length; i++) {
-        var root = true;
-        var parent = authRooms[i].parent;
-        do {
-          let parents = rooms.filter(room => { return room.id === parent });
-          if (parents.length) {
-            if (authRooms.filter(room => { return room.id === parents[0].id }).length) {
-              root = false;
-            }
-            parent = parents[0].parent;
-          } else {
-            parent = null;
-          }
-        } while (parent !== null);
-        if (root) {
-          rootRooms.push(authRooms[i]);
-        }
-      }
+    this.mysql.query("owner/room.php", { uid: this.user.uid }).subscribe((rooms: any) => {
       this.nodes = [];
-      for (let i = 0; i < rootRooms.length; i++) {
-        let res = addRooms(rootRooms[i].id, rooms, rootRooms[i].auth);
-        if (res.length) rootRooms[i].children = res;
-        this.nodes.push(rootRooms[i]);
+      var allRooms = [];
+      for (let i = 0; i < rooms.length; i++) {
+        allRooms = allRooms.concat(rooms[i]);
+        let res = addRooms(rooms[i][0].id, rooms[i], rooms[i][0].auth);
+        if (res.length) rooms[i][0].children = res;
+        this.nodes.push(rooms[i][0]);
       }
-      console.log("room tree:");
-      console.log(this.nodes);
+      this.room = JSON.stringify(allRooms);
     });
     function addRooms(parent, rooms, auth) {
       var childs = [];
@@ -270,17 +258,6 @@ export class TreeComponent implements OnInit {
       }
       return childs;
     }
-  }
-  getPrice(parent) {
-    var price = 0;
-    do {
-      let parents = this.nodes.filter(node => { return node.id === parent; });
-      if (parents.length) {
-        price += parents[0].amount ? parents[0].amount : 0;
-        parent = parents[0].id;
-      }
-    } while (parent.length)
-    return price;
   }
 }
 function getPrice(parent, rooms) {

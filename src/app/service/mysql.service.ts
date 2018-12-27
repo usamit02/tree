@@ -21,14 +21,4 @@ export class MysqlService {
   room(uid: string): Observable<Object> {
     return this.http.get(this.url + "room.php", { params: { uid: uid } });
   }
-  getNode(uid: string): Observable<Object> {
-    return this.http.get(this.url + "owner/room.php", { params: { uid: uid } });
-  }
-  saveNode(uid: string, sql: string): Observable<Object> {
-    return this.http.get(this.url + "owner/room.php", { params: { uid: uid, sql: sql } });
-  }
-  newNode(parent: number): Observable<Object> {
-    return this.http.get(this.url + "owner/room.php", { params: { parent: parent.toString() } });
-  }
-
 }

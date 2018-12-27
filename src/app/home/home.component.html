@@ -19,43 +19,4 @@
   <input type="submit" value="保存" [disabled]="roomForm.pristine || roomForm.invalid || roomForm.submitted" />
   <input type="button" value="取消" (click)="undoRoom(room)" [disabled]="roomForm.pristine" />
 </form>
-<div id="fire2">
-  <p>This is some sample content.</p>
-</div>
-<textarea id="mytextarea">Hello, World!</textarea>
-<app-tiny2 *ngIf="room.contents" [rid]="room.id"></app-tiny2>
-<!--
- <label>紹介文　<textarea name="discription" cols="70" rows="5" [(ngModel)]="room.discription" placeholder="部屋の目的や活動内容など"
-      #discription="ngModel"></textarea></label>
-  <div style="display:flex;">
-    <label>部屋の種類　</label>
-    <label><input type="checkbox" name="chat" [(ngModel)]="room.chat" [value]="1" #chat="ngModel">チャット</label>
-    <label><input type="checkbox" name="contents" [(ngModel)]="room.contents" #contents="ngModel" [value]="1" (change)="changeContents()">コンテンツ</label>
-    <label *ngIf="room.contents"><input type="checkbox" name="pay" [(ngModel)]="pay" [value]="1">この先課金</label>
-  </div>
-  <ng-container *ngIf="pay">
-    <label>月額<input type="number" name="amount" step="100" min="0" max="100000" [(ngModel)]="room.amount" /></label>
-    <label>　引き落とし日<input type="number" min="0" max="31" [(ngModel)]="room.billing_day" name="billing_day" /></label>
-    <label>　お試し期間<input type="number" min="0" max="365" [(ngModel)]="room.trial_days" name="trial_days" />日間</label>
-    <div style="display:flex;">
-      <label><input type="radio" name="no_prorate" [(ngModel)]="room.prorate" [value]="0" [checked]="!room.prorate">月決め料金</label>
-      <label><input type="radio" name="prorate" [(ngModel)]="room.prorate" [value]="1" [checked]="room.prorate">日割り清算する</label>
-    </div>
-  </ng-container>
-  <input type="submit" value="保存" [disabled]="roomForm.pristine || roomForm.invalid || roomForm.submitted" />
-
-
-<form *ngIf="room.auth>=500" [formGroup]=storyForm (ngSubmit)="saveStoryForm()">
-  <ng-container *ngFor="let story of storys">
-    <label>題<input maxlength="100" name="h2" [formControl]="story.h2" /></label>
-    <textarea name="txt" cols="200" rows="10" [formControl]="story.txt"></textarea></label>
-  </ng-container>
-  <input type="submit" value="保存" [disabled]="roomForm.pristine || roomForm.invalid || roomForm.submitted" />
-  <input type="button" value="取消" (click)="undo(room)" [disabled]="roomForm.pristine" />
-</form>
-
-
- <editor name="tiny" id="tiny" apiKey="k5ac3vz6w0fxrw863ng9oartu6tyagjk7kmra9jetazslyfz" [init]="tinyInit"
-    [formControl]="tinyMCE"></editor>
-
--->
+<app-tiny2 *ngIf="room.contents && room.auth>=500" [rid]="room.id"></app-tiny2>

@@ -12,6 +12,7 @@ import { TreeComponent } from "../tree/tree.component"
 export class NavComponent {
   @ViewChild(TreeComponent) protected tree: TreeComponent;
   user = { uid: "AMavP9Icrfe7GbbMt0YCXWFWIY42" };
+  //user = { uid: "b5FnwHPFmsVwym8vze34PUfeF003" };
   room: Room = new Room(0, 0, "お知らせ");
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(

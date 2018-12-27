@@ -58,74 +58,9 @@ export class HomeComponent implements OnInit {
     auth_days: this.auth_days,
     prorate: this.prorate
   });
-  /*
-  tinyMCE = new FormControl();
-  tinyForm = this.builder.group({
-    tinyMCE: this.tinyMCE
-  });*/
-  public Editer = BalloonEditor;
   constructor(private builder: FormBuilder, private mysql: MysqlService) { }
   ngOnInit() {
-    this.Editer.create(document.querySelector("#fire2"),
-      {
-        extraPlugins: [MyCustomUploadAdapterPlugin],
-      }
-    );
-    tinymce.init({
-      selector: '#mytextarea',
-      plugins: 'link table image imagetools media contextmenu wordcount autosave',
-      contextmenu: 'link image media',
-      language_url: 'https://bloggersguild.cf/js/ja.js',
-      menubar: false,
-      image_title: false,
-      file_picker_types: "image",
-      //automatic_uploads: true,
-      file_picker_callback: function (cb, value, meta) {
-        var input = <HTMLInputElement>document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        input.onchange = function () {
-          var file = input.files[0];
-          var reader = new FileReader();
-          reader.onload = function () {
-            /*
-            var id = 'blobid' + (new Date()).getTime();
-            var blobCache = tinymce.activeEditor.editorUpload.blobCache;
-            var base64 = reader.result[0].split(',')[1];
-            var blobInfo = blobCache.create(id, file, base64);
-            blobCache.add(blobInfo);
-            cb(blobInfo.blobUri(), { title: file.name });// call the callback and populate the Title field with the file name
-            */
-          };
-          reader.readAsDataURL(file);
-        };
-        input.click();
-      },
-      images_upload_handler: function (blobInfo, success, failure) {
-        var xhr, formData;
-        xhr = new XMLHttpRequest();
-        xhr.withCredentials = false;
-        xhr.open('POST', 'http://localhost/public_html/upload.php');
-        xhr.onload = function () {
-          var json;
-          if (xhr.status != 200) {
-            failure('HTTP Error: ' + xhr.status);
-            return;
-          }
-          json = JSON.parse(xhr.responseText);
-          if (!json || typeof json.location != 'string') {
-            failure('Invalid JSON: ' + xhr.responseText);
-            return;
-          }
-          success(json.location);
-        };
-        formData = new FormData();
-        formData.append('file', blobInfo.blob(), "test");
-        xhr.send(formData);
-      },
-      //images_upload_url: 'http://localhost/public_html/upload.php',
-      //images_upload_base_path: 'C:/xampp/htdocs_clife/public_html/clife.cf/img/101/'
-    });
+
   }
   changeContents() {
     if (!this.contents.value) this.paid.reset(false);
@@ -171,16 +106,4 @@ export class HomeComponent implements OnInit {
     this.prorate.reset(_room.prorate);
     this._room = _room;
   }
-  /*
-  saveTinyForm() {
-    console.log(this.tinyMCE);
-  }
-  undoTiny() {
-    this.tinyMCE.reset("<h1>おっはー</h1>")
-  }*/
-}
-function MyCustomUploadAdapterPlugin(editor) {
-  editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-    return new MyUploadAdapter(loader);
-  };
 }

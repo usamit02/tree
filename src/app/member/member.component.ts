@@ -237,6 +237,10 @@ export class MemberComponent implements OnInit {
       this.nodes.forEach(node => {
         let children = users.filter(user => { return user.auth === node.id; });
         if (children.length) {
+          let user = this.user;
+          if (children.some(child => { return child.id === this.user.uid; })) {
+            node.my = true;
+          }
           node.children = children;
           node.num = '(' + children.length + ')';
         }

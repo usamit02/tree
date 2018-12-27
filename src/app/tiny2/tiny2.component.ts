@@ -111,8 +111,10 @@ export class Tiny2Component implements OnInit {
   }
   constructor(private mysql: MysqlService) {
   }
-  ngOnInit() {
+  ngOnChanges() {
     this.load();
+  }
+  ngOnInit() {
     $(document).on('dragenter', function (e) {
       e.stopPropagation();
       e.preventDefault();
@@ -130,7 +132,7 @@ export class Tiny2Component implements OnInit {
   load() {
     this.mysql.query("owner/story.php", { rid: this.rid }).subscribe((storys: any) => {
       this.storyLength = storys.length;
-      this.storyMaxid = Math.max(...storys.map(story => story.id));
+      this.storyMaxid = storys.length ? Math.max(...storys.map(story => story.id)) : 0;
       this.storys = storys;
       this.storys.push({ id: this.storyMaxid + 1, txt: this.newTxt, media: this.newMedia, pay: 0 });
       setTimeout(() => {
@@ -211,7 +213,8 @@ export class Tiny2Component implements OnInit {
     this.contextMenu = null;
   }
   newrow() {
-    this.storys.push({ id: Math.max(...this.storys.map(story => story.id)) + 1, txt: this.newTxt, media: this.newMedia });
+    let id = this.storys.length ? Math.max(...this.storys.map(story => story.id)) : 0;
+    this.storys.push({ id: id + 1, txt: this.newTxt, media: this.newMedia });
     setTimeout(() => {
       tinymce.init(this.tinyinit);
     });
