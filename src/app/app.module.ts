@@ -1,6 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-
 import { AppComponent } from './app.component';
 import { TreeComponent } from './tree/tree.component';
 import { HttpClientModule } from '@angular/common/http';
@@ -21,6 +20,9 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { SafePipe } from './safe.pipe';
 import { Tiny2Component } from './tiny2/tiny2.component';
 import { EditorModule } from '@tinymce/tinymce-angular';
+import { AngularFireModule } from 'angularfire2';
+import { AngularFireAuthModule } from 'angularfire2/auth';
+import { firebaseConfig } from '../environments/environment';
 @NgModule({
   declarations: [
     AppComponent,
@@ -55,7 +57,9 @@ import { EditorModule } from '@tinymce/tinymce-angular';
     ReactiveFormsModule,
     CKEditorModule,
     FlexLayoutModule,
-    EditorModule
+    EditorModule,
+    AngularFireModule.initializeApp(firebaseConfig),
+    AngularFireAuthModule,
   ],
   providers: [
     MysqlService

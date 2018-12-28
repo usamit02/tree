@@ -20,3 +20,4 @@
   <input type="button" value="取消" (click)="undoRoom(room)" [disabled]="roomForm.pristine" />
 </form>
 <app-tiny2 *ngIf="room.contents && room.auth>=500" [rid]="room.id"></app-tiny2>
+<span *ngIf="room.auth<500 || !room.contents&&room.auth===500">この部屋の編集権限がありません</span>

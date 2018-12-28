@@ -16,19 +16,19 @@ export class Tiny2Component implements OnInit {
   storyMaxid: number;
   contextMenu = null;
   drag = null;
-  newTxt = "新しい段落";
+  newTxt = '新しい段落';
   newMedia = "ファイルをドロップ<br>または<br>右クリック";
   tinyinit = {
     selector: ".tiny",
     menubar: false,
     inline: true,
-    theme: 'inlite',
+    //theme: 'inlite',
     language_url: 'https://bloggersguild.cf/js/ja.js',
     plugins: [
-      'autolink', 'autosave', 'codesample', 'contextmenu', 'link', 'lists', 'table', 'textcolor', 'image', 'imagetools', 'media', 'paste'
+      'autolink autosave codesample contextmenu link lists advlist table textcolor paste'
     ],
-    selection_toolbar: 'forecolor backcolor | fontselect fontsizeselect | bold italic | h2 h3 | blockquote quicklink copy paste',
-    contextmenu: '| undo redo | paste up down restoredraft del | inserttable cell row column deletetable | paystart payend',
+    selection_toolbar: 'forecolor backcolor | fontselect fontsizeselect | bold italic | h2 h3 | bullist numlist | blockquote quicklink copy paste',
+    contextmenu: '| undo redo | paste up down restoredraft del | bullist numlist | alignleft aligncenter alignright | inserttable cell row column deletetable | paystart payend',
     forced_root_block: false, allow_conditional_comments: true, allow_html_in_named_anchor: true, allow_unsafe_link_target: true,
     setup: (editor) => { // オリジナルのプラグインボタンの追加 
       editor.addMenuItem('del', { //editor.addButton(contextmenu以外のmenu)
@@ -221,7 +221,9 @@ export class Tiny2Component implements OnInit {
   }
   getMedia(html, media) {
     if (!html) return;
-    if (html.indexOf("twitter.com") > 0) {
+    if (html.startsWith("<iframe") && html.endsWith("</iframe>")) {
+      $(media).html(html);
+    } else if (html.indexOf("twitter.com") > 0) {
       let url = html.match("twitter.com/[0-9a-zA-Z_]{1,15}/status(?:es)?/[0-9]{19}");
       if (url && url.length) {
         let tweet = '<blockquote class="twitter-tweet" data-conversation="none"><a href="https://' + url[0] + '"></a></blockquote>';
