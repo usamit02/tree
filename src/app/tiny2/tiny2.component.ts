@@ -276,6 +276,8 @@ export class Tiny2Component implements OnInit {
     }
     function send(file) {
       var fd = new FormData();
+      //const url = "http://localhost/public_html/";
+      const url = "https://bloggersguild.cf/";
       fd.append('rid', rid);
       fd.append('id', media.id);
       fd.append('file', file);
@@ -295,7 +297,7 @@ export class Tiny2Component implements OnInit {
           }
           return xhrobj;
         },
-        url: "http://localhost/public_html/owner/upload.php",
+        url: url + "owner/upload.php",
         type: "POST",
         contentType: false,
         processData: false,
@@ -306,7 +308,7 @@ export class Tiny2Component implements OnInit {
           var res = JSON.parse(data);
           if (res.err === undefined) {
             let html: string;
-            let src = '="http://localhost/public_html/media/' + rid + '/' + media.id + '.' + res.ext + '?' + new Date().getTime();
+            let src = '="../media/' + rid + '/' + media.id + '.' + res.ext + '?' + new Date().getTime();
             if (res.typ === "img") {
               html = '<img src' + src + '">';
             } else if (res.typ === "audio") {
