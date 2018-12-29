@@ -22,8 +22,8 @@
       node.data.na
       }}{{node.data.num}}
     </span>
-    <span *ngIf="!(node.data.id >= 0)" [class.my]="node.data.id===user.uid" [class.noedit]="node.data.room !== room.id || node.data.auth > room.auth">{{
-      node.data.na }}</span>
+    <span *ngIf="!(node.data.id >= 0)" [class.my]="node.data.id===user.uid" [class.noedit]="node.data.room !== room.id || node.data.auth > room.auth">
+      <img class="avatar" [src]="node.data.avatar">{{node.data.na }}</span>
     <span *ngIf="node.data.id > 9999">{{ node.data.na }}</span>
   </ng-template>
 </tree-root>

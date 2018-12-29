@@ -8,15 +8,23 @@
     <app-member [user]="user" [room]="room"></app-member>
   </mat-sidenav>
   <mat-sidenav-content>
-    <mat-toolbar color="primary" [class.paid]="room.price">
+    <mat-toolbar color="primary" [class.paid]="room.price" [class.logout]="!user.uid">
       <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawerL.toggle()">
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>
       <span>{{room.na}}</span><span class="fill-space"></span>
+      <button (click)="logout()">
+        <mat-icon color="primaty">exit_to_app</mat-icon>
+      </button>
       <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawerR.toggle()">
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>
     </mat-toolbar>
+    <div *ngIf="!user.uid">
+      <button (click)="login('twitter')">twitter</button>
+      <button (click)="login('facebook')">facebook</button>
+      <button (click)="login('google')">google</button>
+    </div>
     <app-home [user]="user" [room]="room" (saveRoom)=saveRoom()></app-home>
   </mat-sidenav-content>
 </mat-sidenav-container>

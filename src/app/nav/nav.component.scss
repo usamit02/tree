@@ -21,6 +21,14 @@
 .paid{
   background-color: green;
 }
+.logout{
+  background-color:palevioletred;
+}
 .fill-space{
   flex:1 1 auto;
+}
+.spacer {
+  -webkit-box-flex: 1;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
 }

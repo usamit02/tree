@@ -261,7 +261,7 @@ export class MemberComponent implements OnInit {
       }
       if (users.length) {
         for (let i = 0; i < users.length; i++) {
-          let node = { id: users[i].id, na: users[i].na, room: this.room.id, auth: 0 };
+          let node = { id: users[i].id, na: users[i].na, avatar: users[i].avatar, room: this.room.id, auth: 0 };
           this.nodes[7].children.push(node);
         }
       } else {

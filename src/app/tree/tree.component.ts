@@ -230,6 +230,9 @@ export class TreeComponent implements OnInit {
   constructor(private mysql: MysqlService) { }
 
   ngOnInit() {
+
+  }
+  ngOnChanges() {
     this.getNode();
   }
   public getNode() {
