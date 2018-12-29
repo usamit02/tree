@@ -7,8 +7,6 @@ import { TreeComponent } from "../tree/tree.component";
 import * as firebase from 'firebase';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { MysqlService } from '../service/mysql.service';
-import { firebaseConfig } from '../../environments/environment';
-import { createRootComponent } from '@angular/core/src/render3/component';
 @Component({
   selector: 'app-nav',
   templateUrl: './nav.component.html',
@@ -30,7 +28,6 @@ export class NavComponent {
     this.room = new Room(0, 0, "ログインしてください");
   }
   ngOnInit() {
-    // firebase.initializeApp(firebaseConfig);
     firebase.auth().onAuthStateChanged((user) => {
       if (user.uid) {
         this.user = user;
