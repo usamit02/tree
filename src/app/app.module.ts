@@ -22,7 +22,14 @@ import { Tiny2Component } from './tiny2/tiny2.component';
 import { EditorModule } from '@tinymce/tinymce-angular';
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireAuthModule } from 'angularfire2/auth';
-import { firebaseConfig } from '../environments/environment';
+const firebaseConfig = {
+  apiKey: 'AIzaSyAvD0ftnENGOCvE9cOPB8AklV7JeMY4cfg',
+  authDomain: 'blogersguild1.firebaseapp.com',
+  databaseURL: 'https://blogersguild1.firebaseio.com',
+  projectId: 'blogersguild1',
+  storageBucket: 'blogersguild1.appspot.com',
+  messagingSenderId: '1091781872346'
+};
 @NgModule({
   declarations: [
     AppComponent,
