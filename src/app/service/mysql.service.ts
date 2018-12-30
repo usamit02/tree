@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpRequest } from '@angular/common/http';
 import { Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root'
@@ -20,7 +20,10 @@ export class MysqlService {
     for (const key of Object.keys(formData)) {
       fd.append(key, formData[key]);
     }
-    return this.http.post(this.url + url, fd);
+    let params = new HttpParams();
+    const req = new HttpRequest('POST', this.url + url, fd, { params: params, reportProgress: true });
+    return this.http.request(req);
+    //return this.http.post(this.url + url, fd, { reportProgress: true,observe:'events' });
   }
   room(uid: string): Observable<Object> {
     return this.http.get(this.url + "room.php", { params: { uid: uid } });

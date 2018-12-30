@@ -18,6 +18,7 @@ export class Tiny2Component implements OnInit {
   drag = null;
   newTxt = '新しい段落';
   newMedia = "ファイルをドロップ<br>または<br>右クリック";
+  progress = { load: 0, total: 0 };
   tinyinit = {
     selector: ".tiny",
     menubar: false,
@@ -196,7 +197,7 @@ export class Tiny2Component implements OnInit {
     if (media.className !== "media") {
       media = $(media).parents(".media");
     }
-    this.contextMenu = this.contextMenu ? null : { media: media, x: e.pageX, y: e.pageY };
+    this.contextMenu = this.contextMenu ? null : { media: media, x: e.layerX, y: e.pageY };
   }
   fileup(e) {
     this.upload(e.target.files, this.contextMenu.media);//$(e.target).prevAll('.media'));
@@ -248,13 +249,12 @@ export class Tiny2Component implements OnInit {
     }
   }
   upload(files, media) {
+    if (!files.length) return;
     var rid = this.rid.toString();
     const mysql = this.mysql;
-    if (!files.length) return;
+    var storys = this.storys;
+    var progress = this.progress;
     var medias = this.medias;
-    var rowCount = 0;
-    var status = new createStatusbar(media); //Using this we can set progress.
-    status.setFileNameSize(files[0].name, files[0].size);
     if (files[0].type.match(/image.*/)) {
       var canvas = document.querySelector('canvas');
       var ctx = canvas.getContext('2d');
@@ -276,63 +276,35 @@ export class Tiny2Component implements OnInit {
       send(files[0]);
     }
     function send(file) {
+      const url = "https://bloggersguild.cf/";
+      const id = Number($(media).parents(".row").attr('id'));
+      storys[id].media = file.name;
+      storys[id].upload = true;
       mysql.upload("owner/upload.php", { rid: rid, id: media.id, file: file }).subscribe((res: any) => {
-        if (res.err === undefined) {
-          let html: string;
-          let src = '="../media/' + rid + '/' + media.id + '.' + res.ext + '?' + new Date().getTime();
-          if (res.typ === "img") {
-            html = '<img src' + src + '">';
-          } else if (res.typ === "audio") {
-            html = '<audio src' + src + '" controls>';
-          } else if (res.typ === "video") {
-            html = '<video src' + src + '" controls>';
+        if (res.type == 1 && res.loaded && res.total) {
+          progress.load = res.loaded;
+          progress.total = res.total;
+        } else if (res.body) {
+          storys[id].upload = false;
+          if (res.body.err === undefined) {
+            let html: string;
+            let src = '="' + url + 'media/' + rid + '/' + media.id + '.' + res.body.ext + '?' + new Date().getTime();
+            if (res.body.typ === "img") {
+              html = '<img src' + src + '">';
+            } else if (res.body.typ === "audio") {
+              html = '<audio src' + src + '" controls>';
+            } else if (res.body.typ === "video") {
+              html = '<video src' + src + '" controls>';
+            } else {
+              html = '<a href' + src + '" download="' + media.id + '.' + res.body.ext + '"><img src="' + url + 'img/downlord.jpg"></a>';
+            }
+            storys[id].media = html;//media.innerHTML = html;
+            medias[media.id] = html;
           } else {
-            html = '<a href' + src + '" download="' + media.id + '.' + res.ext + '"><img src="img/downlord.jpg"></a>';
+            alert(res.body.err);
           }
-          media.innerHTML = html;
-          medias[media.id] = html;
-        } else {
-          alert(res.err);
         }
       });
-    }
-    function createStatusbar(obj) {
-      rowCount++;
-      var row = "odd";
-      if (rowCount % 2 == 0) row = "even";
-      this.statusbar = $("<div class='statusbar " + row + "'></div>");
-      this.filename = $("<div class='filename'></div>").appendTo(this.statusbar);
-      this.size = $("<div class='filesize'></div>").appendTo(this.statusbar);
-      this.progressBar = $("<div class='progressBar'><div></div></div>").appendTo(this.statusbar);
-      this.abort = $("<div class='abort'>Abort</div>").appendTo(this.statusbar);
-      $(obj).children().replaceWith(this.statusbar);
-      this.setFileNameSize = function (name, size) {
-        var sizeStr = "";
-        var sizeKB = size / 1024;
-        if (sizeKB > 1024) {
-          var sizeMB = sizeKB / 1024;
-          sizeStr = sizeMB.toFixed(2) + " MB";
-        }
-        else {
-          sizeStr = sizeKB.toFixed(2) + " KB";
-        }
-        this.filename.html(name);
-        this.size.html(sizeStr);
-      }
-      this.setProgress = function (progress) {
-        var progressBarWidth = progress * this.progressBar.width() / 100;
-        this.progressBar.find('div').animate({ width: progressBarWidth }, 10).html(progress + "% ");
-        if (parseInt(progress) >= 100) {
-          this.abort.hide();
-        }
-      }
-      this.setAbort = function (jqxhr) {
-        var sb = this.statusbar;
-        this.abort.click(function () {
-          jqxhr.abort();
-          sb.hide();
-        });
-      }
     }
   }
   dateFormat(date = new Date()) {//MySQL用日付文字列作成'yyyy-M-d H:m:s'
