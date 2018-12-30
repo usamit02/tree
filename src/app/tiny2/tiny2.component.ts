@@ -224,6 +224,7 @@ export class Tiny2Component implements OnInit {
     if (!html) return;
     if (html.startsWith("<iframe") && html.endsWith("</iframe>")) {
       $(media).html(html);
+      this.medias[media.id] = html;
     } else if (html.indexOf("twitter.com") > 0) {
       let url = html.match("twitter.com/[0-9a-zA-Z_]{1,15}/status(?:es)?/[0-9]{19}");
       if (url && url.length) {

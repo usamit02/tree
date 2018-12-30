@@ -3,7 +3,7 @@
     <div [id]="i" class="row" [class.pay]="story.pay > 0" draggable="true" (dragstart)="dragstart($event)" (dragenter)="dragentertxt($event)"
       (dragover)="dragover($event)" (drop)="droptxt($event)" (dragend)="dragend()">
       <div>
-        <div class="media" [id]="'media' + story.id" [innerHtml]="story.media" (dragenter)="dragenter($event)"
+        <div class="media" [id]="'media' + story.id" [innerHtml]="story.media  | safe: 'html'" (dragenter)="dragenter($event)"
           (dragover)="dragover($event)" (drop)="dropmedia($event)" draggable="false" (contextmenu)="context($event)">
         </div>
         <progress *ngIf="story.upload" [value]="progress.load" [max]="progress.total"></progress>
