@@ -249,6 +249,7 @@ export class Tiny2Component implements OnInit {
   }
   upload(files, media) {
     var rid = this.rid.toString();
+    const mysql = this.mysql;
     if (!files.length) return;
     var medias = this.medias;
     var rowCount = 0;
@@ -275,57 +276,23 @@ export class Tiny2Component implements OnInit {
       send(files[0]);
     }
     function send(file) {
-      var fd = new FormData();
-      //const url = "http://localhost/public_html/";
-      const url = "https://bloggersguild.cf/";
-      fd.append('rid', rid);
-      fd.append('id', media.id);
-      fd.append('file', file);
-      var jqXHR = $.ajax({
-        xhr: () => {
-          var xhrobj = $.ajaxSettings.xhr();
-          if (xhrobj.upload) {
-            xhrobj.upload.addEventListener('progress', function (event) {
-              var percent = 0;
-              var position = event.loaded || event.position;
-              var total = event.total;
-              if (event.lengthComputable) {
-                percent = Math.ceil(position / total * 100);
-              }
-              status.setProgress(percent);
-            }, false);
-          }
-          return xhrobj;
-        },
-        url: url + "owner/upload.php",
-        type: "POST",
-        contentType: false,
-        processData: false,
-        cache: false,
-        data: fd,
-        success: (data) => {
-          status.setProgress(100);
-          var res = JSON.parse(data);
-          if (res.err === undefined) {
-            let html: string;
-            let src = '="../media/' + rid + '/' + media.id + '.' + res.ext + '?' + new Date().getTime();
-            if (res.typ === "img") {
-              html = '<img src' + src + '">';
-            } else if (res.typ === "audio") {
-              html = '<audio src' + src + '" controls>';
-            } else if (res.typ === "video") {
-              html = '<video src' + src + '" controls>';
-            } else {
-              html = '<a href' + src + '" download="' + media.id + '.' + res.ext + '"><img src="img/downlord.jpg"></a>';
-            }
-            media.innerHTML = html;
-            medias[media.id] = html;
+      mysql.upload("owner/upload.php", { rid: rid, id: media.id, file: file }).subscribe((res: any) => {
+        if (res.err === undefined) {
+          let html: string;
+          let src = '="../media/' + rid + '/' + media.id + '.' + res.ext + '?' + new Date().getTime();
+          if (res.typ === "img") {
+            html = '<img src' + src + '">';
+          } else if (res.typ === "audio") {
+            html = '<audio src' + src + '" controls>';
+          } else if (res.typ === "video") {
+            html = '<video src' + src + '" controls>';
           } else {
-            alert(res.err);
+            html = '<a href' + src + '" download="' + media.id + '.' + res.ext + '"><img src="img/downlord.jpg"></a>';
           }
-        },
-        error: (XMLHttpRequest, textStatus, errorThrown) => {
-          alert("ajax通信に失敗しました。");
+          media.innerHTML = html;
+          medias[media.id] = html;
+        } else {
+          alert(res.err);
         }
       });
     }

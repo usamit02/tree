@@ -15,10 +15,15 @@ export class MysqlService {
   api(url: string, params: any): Observable<Object> {
     return this.http.get(url, { params: params });
   }
-  upload(url: string, data: FormData): Observable<Object> {
-    return this.http.post(this.url + url, data);
+  upload(url: string, formData: any): Observable<Object> {
+    let fd = new FormData;
+    for (const key of Object.keys(formData)) {
+      fd.append(key, formData[key]);
+    }
+    return this.http.post(this.url + url, fd);
   }
   room(uid: string): Observable<Object> {
     return this.http.get(this.url + "room.php", { params: { uid: uid } });
   }
+
 }
