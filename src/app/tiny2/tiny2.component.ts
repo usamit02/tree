@@ -197,7 +197,7 @@ export class Tiny2Component implements OnInit {
     if (media.className !== "media") {
       media = $(media).parents(".media");
     }
-    this.contextMenu = this.contextMenu ? null : { media: media, x: e.layerX, y: e.pageY };
+    this.contextMenu = this.contextMenu ? null : { media: media, x: e.layerX, y: media.offsetTop };
   }
   fileup(e) {
     this.upload(e.target.files, this.contextMenu.media);//$(e.target).prevAll('.media'));
@@ -263,8 +263,14 @@ export class Tiny2Component implements OnInit {
       var reader = new FileReader();
       reader.onload = () => {
         img.onload = () => {
-          let h = 480;
-          let w = img.width * (h / img.height);
+          let w, h;
+          if (img.width > img.height) {
+            w = 640;//横長
+            h = img.height * (w / img.width);
+          } else {
+            h = 480;//縦長
+            w = img.width * (h / img.height);
+          }
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           canvas.width = w; canvas.height = h;
           ctx.drawImage(img, 0, 0, w, h);
@@ -364,7 +370,7 @@ export class Tiny2Component implements OnInit {
     });
     console.log(sql);
     if (sql) {
-      this.mysql.query("owner/story.php", { sql: sql.substr(0, sql.length - 1) }).subscribe((res: any) => {
+      this.mysql.post("owner/story.php", { sql: sql.substr(0, sql.length - 1) }).subscribe((res: any) => {
         if (res.msg === "ok") {
           this.txts = []; this.medias = []; this.storyLength += newStoryLength;
           if (reload) this.load();

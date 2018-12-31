@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpRequest } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpRequest, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root'
@@ -11,6 +11,15 @@ export class MysqlService {
   }
   query(url: string, params: any): Observable<Object> {
     return this.http.get(this.url + url, { params: params });
+  }
+  post(url: string, params: any): Observable<Object> {
+    let body = new HttpParams;
+    for (const key of Object.keys(params)) {
+      body = body.append(key, params[key]);
+    }
+    return this.http.post(this.url + url, body, {
+      headers: new HttpHeaders({ "Content-Type": "application/x-www-form-urlencoded" })
+    });
   }
   api(url: string, params: any): Observable<Object> {
     return this.http.get(url, { params: params });
