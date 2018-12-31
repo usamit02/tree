@@ -28,8 +28,8 @@ export class Tiny2Component implements OnInit {
     plugins: [
       'autolink autosave codesample contextmenu link lists advlist table textcolor paste'
     ],
-    selection_toolbar: 'forecolor backcolor | fontselect fontsizeselect | bold italic | h2 h3 | bullist numlist | blockquote quicklink copy paste',
-    contextmenu: '| undo redo | paste up down restoredraft del | bullist numlist | alignleft aligncenter alignright | inserttable cell row column deletetable | paystart payend',
+    toolbar: 'forecolor backcolor | fontselect fontsizeselect styleselect | bullist numlist | blockquote quicklink copy paste',
+    contextmenu: '| undo redo | paste up down restoredraft del | inserttable cell row column deletetable | paystart payend',
     forced_root_block: false, allow_conditional_comments: true, allow_html_in_named_anchor: true, allow_unsafe_link_target: true,
     setup: (editor) => { // オリジナルのプラグインボタンの追加 
       editor.addMenuItem('del', { //editor.addButton(contextmenu以外のmenu)
@@ -256,6 +256,7 @@ export class Tiny2Component implements OnInit {
     var storys = this.storys;
     var progress = this.progress;
     var medias = this.medias;
+    const fileName = files[0].name;
     if (files[0].type.match(/image.*/)) {
       var canvas = document.querySelector('canvas');
       var ctx = canvas.getContext('2d');
@@ -265,10 +266,10 @@ export class Tiny2Component implements OnInit {
         img.onload = () => {
           let w, h;
           if (img.width > img.height) {
-            w = 640;//横長
+            w = img.width > 640 ? 640 : img.width;//横長
             h = img.height * (w / img.width);
           } else {
-            h = 480;//縦長
+            h = img.height > 480 ? 480 : img.height;//縦長
             w = img.width * (h / img.height);
           }
           ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -285,7 +286,7 @@ export class Tiny2Component implements OnInit {
     function send(file) {
       const url = "https://bloggersguild.cf/";
       const id = Number($(media).parents(".row").attr('id'));
-      storys[id].media = file.name;
+      storys[id].media = fileName;
       storys[id].upload = true;
       mysql.upload("owner/upload.php", { rid: rid, id: media.id, file: file }).subscribe((res: any) => {
         if (res.type == 1 && res.loaded && res.total) {

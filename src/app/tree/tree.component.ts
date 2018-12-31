@@ -128,6 +128,7 @@ export class TreeComponent implements OnInit {
         rooms.push(room);
         this.room = JSON.stringify(rooms);
         room.price = getPrice(node.id, rooms);
+        room.auth = node.data.auth;
         if (!node.data.children) node.data.children = [];
         node.data.children.push(room);
         tree.treeModel.update();
