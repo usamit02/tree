@@ -28,8 +28,8 @@ export class Tiny2Component implements OnInit {
     plugins: [
       'autolink autosave codesample contextmenu link lists advlist table textcolor paste'
     ],
-    toolbar: 'forecolor backcolor | fontselect fontsizeselect styleselect | bullist numlist | blockquote quicklink copy paste',
-    contextmenu: '| undo redo | paste up down restoredraft del | inserttable cell row column deletetable | paystart payend',
+    toolbar: 'undo redo | forecolor backcolor | fontselect fontsizeselect styleselect | bullist numlist | blockquote link copy paste',
+    contextmenu: 'up down restoredraft del | inserttable cell row column deletetable | paystart payend',
     forced_root_block: false, allow_conditional_comments: true, allow_html_in_named_anchor: true, allow_unsafe_link_target: true,
     setup: (editor) => { // オリジナルのプラグインボタンの追加 
       editor.addMenuItem('del', { //editor.addButton(contextmenu以外のmenu)

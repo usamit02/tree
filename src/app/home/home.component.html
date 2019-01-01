@@ -4,7 +4,7 @@
     <label>機能　</label>
     <label><input type="checkbox" name="chat" [formControl]="chat" [value]="1" />チャット　</label>
     <label><input type="checkbox" name="contents" (change)="changeContents()" [formControl]="contents" [value]="1" />コンテンツ　</label>
-    <label *ngIf="contents.value"><input type="checkbox" name="paid" [formControl]="paid" [value]="1">この先課金　</label>
+    <label *ngIf="contents.value"><input type="checkbox" name="paid" [formControl]="paid" [value]="1">この先サロン　</label>
   </div>
   <ng-container *ngIf="paid.value">
     <label>月額<input type="number" min="50" max="100000" name="amount" step="100" [formControl]="amount" />円</label>
