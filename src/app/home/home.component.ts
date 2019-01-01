@@ -1,10 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { Room, MyUploadAdapter } from '../class';
-import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms';
+import { Room } from '../class';
+import { FormControl, FormBuilder, Validators } from '@angular/forms';
 import { MysqlService } from '../service/mysql.service';
-import * as BalloonEditor from '@ckeditor/ckeditor5-build-balloon';
-//import { } from './upload.adapter'
-declare var tinymce: any;
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -12,9 +9,7 @@ declare var tinymce: any;
 })
 export class HomeComponent implements OnInit {
   private _room: Room;
-  // user = { uid: "AMavP9Icrfe7GbbMt0YCXWFWIY42" };
   pay: boolean = false;
-  plan = { amount: 3000, billing_day: null, trial_days: null };
   @Input()
   set room(_room: Room) {
     this.undoRoom(_room);
@@ -79,16 +74,19 @@ export class HomeComponent implements OnInit {
         params.plan[planProp[i]] = this.roomForm.value[planProp[i]] === false ? 0 : this.roomForm.value[planProp[i]];
       }
     }
-    this.mysql.query("owner/save.php", { roomForm: JSON.stringify(params), roomId: this.room.id }).subscribe((data: any) => {
-      if (data.msg === "ok") {
-        for (const p of Object.keys(this.roomForm.value)) {
-          this._room[p] = this.roomForm.value[p];
+    this.mysql.query("owner/save.php", { roomForm: JSON.stringify(params), roomId: this.room.id }).subscribe(
+      (data: any) => {
+        if (data.msg === "ok") {
+          for (const p of Object.keys(this.roomForm.value)) {
+            this._room[p] = this.roomForm.value[p];
+          }
+          this.saveRoom.emit("");
+        } else {
+          alert("データベースエラー C-Lifeまでお問合せください。");
         }
-        this.saveRoom.emit("");
-      } else {
-        alert("データベースエラー C-Lifeまでお問合せください。");
-      }
-    });
+      }, error => {
+        alert("通信エラー" + error.statusText);
+      });
   }
   undoRoom(_room) {
     this.roomForm.reset();
@@ -99,9 +97,12 @@ export class HomeComponent implements OnInit {
     this.paid.reset(this.pay);
     let amount = _room.amount > 49 ? _room.amount : 3000;
     this.amount.reset(amount);
-    this.billing_day.reset(_room.billing_day);
-    this.trial_days.reset(_room.trial_days);
-    this.auth_days.reset(_room.auth_days);
+    let billing_day = _room.billing_day ? _room.billing_day : 0;
+    this.billing_day.reset(billing_day);
+    let trial_days = _room.traial_days ? _room.traial_days : 0;
+    this.trial_days.reset(trial_days);
+    let auth_days = _room.auth_days || _room.auth_days === 0 ? _room.auth_days : 3;
+    this.auth_days.reset(auth_days);
     //let prorate = _room.prorate ? true : false;
     this.prorate.reset(_room.prorate);
     this._room = _room;
