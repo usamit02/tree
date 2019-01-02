@@ -5,8 +5,8 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class MysqlService {
-  //url: string = "http://localhost/public_html/";
-  url: string = "https://bloggersguild.cf/";
+  url: string = "http://localhost/public_html/";
+  //url: string = "https://bloggersguild.cf/";
   constructor(private http: HttpClient) {
   }
   query(url: string, params: any): Observable<Object> {

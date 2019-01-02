@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { MysqlService } from '../service/mysql.service';
 declare var $; declare var twttr; declare var tinymce;
 @Component({
@@ -8,6 +8,8 @@ declare var $; declare var twttr; declare var tinymce;
 })
 export class Tiny2Component implements OnInit {
   @Input() rid: number;
+  @Input() exec;
+  @Output() save = new EventEmitter<string>();
   storys = [];
   txts = [];
   medias = [];
@@ -34,7 +36,10 @@ export class Tiny2Component implements OnInit {
     setup: (editor) => { // オリジナルのプラグインボタンの追加 
       editor.addMenuItem('del', { //editor.addButton(contextmenu以外のmenu)
         text: '段落を削除',
-        onclick: () => { $("#" + editor.id).parent().fadeOut(500); }
+        onclick: () => {
+          $("#" + editor.id).parent().fadeOut(500);
+          this.save.emit("savestory");
+        }
       });
       editor.addMenuItem('up', {
         text: '段落を上に移動',
@@ -65,6 +70,7 @@ export class Tiny2Component implements OnInit {
               if (p >= 0 && p < 1000000 && this.storys[idx].pay != p) {
                 this.storys[idx].pay = p;
                 this.pays[idx] = p;
+                this.save.emit("savestory");
               }
             }
           })
@@ -80,6 +86,7 @@ export class Tiny2Component implements OnInit {
                 if (this.storys[j].pay != this.storys[i].pay) {
                   this.storys[j].pay = this.storys[i].pay;
                   this.pays[j] = this.storys[i].pay;
+                  this.save.emit("savestory");
                 }
               }
               break;
@@ -90,8 +97,10 @@ export class Tiny2Component implements OnInit {
       editor.on('blur', (e) => {
         if ($("#" + editor.id).parent().css('display') !== 'none') {
           let html = makeStory(editor);
-          if (html != this.newTxt) this.txts[editor.id] = html;
-          console.log(editor.id + ":" + html);
+          if (html != this.newTxt) {
+            this.save.emit("savestory");
+            this.txts[editor.id] = html;
+          };
         }
       });
       function updown(up, editor) {
@@ -102,6 +111,7 @@ export class Tiny2Component implements OnInit {
           } else {
             rep.after($("#" + editor.id).parent());
           }
+          this.save.emit("savestory");
         }
       }
       function makeStory(editor) {
@@ -113,7 +123,14 @@ export class Tiny2Component implements OnInit {
   constructor(private mysql: MysqlService) {
   }
   ngOnChanges() {
-    this.load();
+    if (this.exec === "savestory") {
+      this.saveStory();
+    } else if (this.exec === "undostory") {
+      this.load();
+      this.save.emit("done");
+    } else {
+      this.load();
+    }
   }
   ngOnInit() {
     $(document).on('dragenter', function (e) {
@@ -136,6 +153,7 @@ export class Tiny2Component implements OnInit {
       this.storyMaxid = storys.length ? Math.max(...storys.map(story => story.id)) : 0;
       this.storys = storys;
       this.storys.push({ id: this.storyMaxid + 1, txt: this.newTxt, media: this.newMedia, pay: 0 });
+      this.txts = []; this.medias = [];
       setTimeout(() => {
         twttr.widgets.load();
         tinymce.init(this.tinyinit);
@@ -212,6 +230,7 @@ export class Tiny2Component implements OnInit {
     media.innerHTML = "";
     this.medias[media.id] = "";
     this.contextMenu = null;
+    this.save.emit("savestory");
   }
   newrow() {
     let id = this.storys.length ? Math.max(...this.storys.map(story => story.id)) : 0;
@@ -225,6 +244,7 @@ export class Tiny2Component implements OnInit {
     if (html.startsWith("<iframe") && html.endsWith("</iframe>")) {
       $(media).html(html);
       this.medias[media.id] = html;
+      this.save.emit("savestory");
     } else if (html.indexOf("twitter.com") > 0) {
       let url = html.match("twitter.com/[0-9a-zA-Z_]{1,15}/status(?:es)?/[0-9]{19}");
       if (url && url.length) {
@@ -232,6 +252,7 @@ export class Tiny2Component implements OnInit {
         $(media).html(tweet);
         twttr.widgets.load();
         this.medias[media.id] = tweet;
+        this.save.emit("savestory");
       } else {
         alert("twitterのurlを解析できませんでした。");
       }
@@ -242,17 +263,20 @@ export class Tiny2Component implements OnInit {
         let youtube = '<a href="https://youtube.com/watch?v=' + id[1] + '" target="_blank">' + tag + '</a>';
         $(media).html(youtube);
         this.medias[media.id] = youtube;
+        this.save.emit("savestory");
       } else {
         alert("youtubeのurlを解析できませんでした。");
       }
     } else {
       alert("twitterかyoutubeのurlを入力してください。");
     }
+
   }
   upload(files, media) {
     if (!files.length) return;
     var rid = this.rid.toString();
     const mysql = this.mysql;
+    const save = this.save;
     var storys = this.storys;
     var progress = this.progress;
     var medias = this.medias;
@@ -308,6 +332,7 @@ export class Tiny2Component implements OnInit {
             }
             storys[id].media = html;//media.innerHTML = html;
             medias[media.id] = html;
+            save.emit("savestory");
           } else {
             alert(res.body.err);
           }
@@ -324,7 +349,7 @@ export class Tiny2Component implements OnInit {
     var sec = date.getSeconds();
     return "'" + y + "-" + m + "-" + d + " " + h + ":" + min + ":" + sec + "'";
   }
-  save() {
+  saveStory() {
     const rid = this.rid, storys = this.storys, txts = this.txts, medias = this.medias, pays = this.pays;
     var i = 0, sql = "", reload = false, newStoryLength = 0;
     $(".row").each((index, row) => {
@@ -381,6 +406,7 @@ export class Tiny2Component implements OnInit {
             this.load();
           };
         }
+        this.save.emit("done");
       });
     }
   }

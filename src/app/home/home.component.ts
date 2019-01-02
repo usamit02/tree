@@ -7,7 +7,7 @@ import { MysqlService } from '../service/mysql.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent {
   private _room: Room;
   pay: boolean = false;
   @Input()
@@ -18,12 +18,13 @@ export class HomeComponent implements OnInit {
     return this._room;
   }
   @Input() user;
-  @Output() saveRoom = new EventEmitter();
+  @Input() exec;
+  @Output() save = new EventEmitter<string>();
   discription = new FormControl(
     Validators.maxLength(500)
   );
   chat = new FormControl();
-  contents = new FormControl();
+  story = new FormControl();
   paid = new FormControl();
   amount = new FormControl(
     Validators.min(50),
@@ -45,7 +46,7 @@ export class HomeComponent implements OnInit {
   roomForm = this.builder.group({
     discription: this.discription,
     chat: this.chat,
-    contents: this.contents,
+    story: this.story,
     paid: this.paid,
     amount: this.amount,
     billing_day: this.billing_day,
@@ -55,10 +56,26 @@ export class HomeComponent implements OnInit {
   });
   constructor(private builder: FormBuilder, private mysql: MysqlService) { }
   ngOnInit() {
-
+    this.roomForm.valueChanges.subscribe((formData) => {
+      if (this.roomForm.dirty && formData.amount !== null) {
+        if (this.roomForm.valid) {
+          this.save.emit("saveroom");
+        } else {
+          this.save.emit("undoroom");
+        }
+      }
+    });
   }
-  changeContents() {
-    if (!this.contents.value) this.paid.reset(false);
+  ngOnChanges() {
+    if (this.exec === "saveroom") {
+      this.saveRoomForm();
+    } else if (this.exec === "undoroom") {
+      this.undoRoom(this.room);
+      this.save.emit("done");
+    }
+  }
+  changestory() {
+    if (!this.story.value) this.paid.reset(false);
   }
   saveRoomForm() {
     console.log(this.roomForm.value);
@@ -80,7 +97,7 @@ export class HomeComponent implements OnInit {
           for (const p of Object.keys(this.roomForm.value)) {
             this._room[p] = this.roomForm.value[p];
           }
-          this.saveRoom.emit("");
+          this.save.emit("roomdone");
         } else {
           alert("データベースエラー C-Lifeまでお問合せください。");
         }
@@ -92,7 +109,7 @@ export class HomeComponent implements OnInit {
     this.roomForm.reset();
     this.discription.reset(_room.discription);
     this.chat.reset(_room.chat);
-    this.contents.reset(_room.contents);
+    this.story.reset(_room.story);
     this.pay = _room.plan ? true : false;
     this.paid.reset(this.pay);
     let amount = _room.amount > 49 ? _room.amount : 3000;

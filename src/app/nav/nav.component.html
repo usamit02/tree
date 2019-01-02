@@ -8,13 +8,19 @@
     <app-member [user]="user" [room]="room"></app-member>
   </mat-sidenav>
   <mat-sidenav-content>
-    <mat-toolbar color="primary" [class.paid]="room.price" [class.logout]="!user.uid">
+    <mat-toolbar color="primary" [class.paid]="room.price" [class.logout]="!user.uid || save">
       <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawerL.toggle()">
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>
       <span>{{room.na}}</span><span class="fill-space"></span>
-      <button (click)="logout()">
-        <mat-icon color="primaty">exit_to_app</mat-icon>
+      <button *ngIf="save=='saveroom'||save=='savestory'" mat-icon-button (click)="exec=save">
+        <mat-icon>save</mat-icon>
+      </button>
+      <button *ngIf="save" mat-icon-button (click)="undo()">
+        <mat-icon>undo</mat-icon>
+      </button>
+      <button mat-icon-button (click)="logout()">
+        <mat-icon>exit_to_app</mat-icon>
       </button>
       <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawerR.toggle()">
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
@@ -25,6 +31,9 @@
       <button (click)="login('facebook')">facebook</button>
       <button (click)="login('google')">google</button>
     </div>
-    <app-home [user]="user" [room]="room" (saveRoom)=saveRoom()></app-home>
+    <app-home [user]="user" [room]="room" [exec]="exec" (save)=saveCTL($event)></app-home>
+    <p></p>
+    <app-tiny2 *ngIf="room.story && room.auth>=500" [rid]="room.id" [exec]="exec" (save)=saveCTL($event)></app-tiny2>
+    <span *ngIf="room.auth<500 || !room.contents&&room.auth===500">この部屋の編集権限がありません</span>
   </mat-sidenav-content>
 </mat-sidenav-container>

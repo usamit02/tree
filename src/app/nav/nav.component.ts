@@ -18,6 +18,8 @@ export class NavComponent {
   //user = { uid: "b5FnwHPFmsVwym8vze34PUfeF003" };
   user = { uid: "", displayName: "", photoURL: "" };
   room: Room;
+  save;
+  exec;
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
       map(result => result.matches)
@@ -46,9 +48,25 @@ export class NavComponent {
   }
   onSelected(room) {
     this.room = room;
+    this.save = "";
   }
-  saveRoom() {
-    this.tree.getNode();
+  saveCTL(com) {
+    if (com === "roomdone") {
+      this.tree.getNode();
+      this.save = "";
+      this.exec = "";
+    } else if (com === "done") {
+      this.save = ""; this.exec = "";
+    } else {
+      this.save = com;
+    }
+  }
+  undo() {
+    if (this.save === "saveroom") {
+      this.exec = "undoroom";
+    } else if (this.save === "savestory") {
+      this.exec = "undostory";
+    }
   }
   login(sns) {
     if (sns === "twitter") {

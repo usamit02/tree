@@ -1,10 +1,10 @@
-<form *ngIf="room.auth>=1000" [formGroup]=roomForm (ngSubmit)="saveRoomForm()">
+<form *ngIf="room.auth>=1000" [formGroup]="roomForm">
   <label>紹介文　<textarea name="discription" cols="70" rows="5" placeholder="部屋の目的や活動内容など" [formControl]="discription"></textarea></label>
   <div style="display:flex;">
     <label>機能　</label>
     <label><input type="checkbox" name="chat" [formControl]="chat" [value]="1" />チャット　</label>
-    <label><input type="checkbox" name="contents" (change)="changeContents()" [formControl]="contents" [value]="1" />コンテンツ　</label>
-    <label *ngIf="contents.value"><input type="checkbox" name="paid" [formControl]="paid" [value]="1">この先サロン　</label>
+    <label><input type="checkbox" name="story" (change)="changestory()" [formControl]="story" [value]="1" />ストーリー　</label>
+    <label *ngIf="story.value"><input type="checkbox" name="paid" [formControl]="paid" [value]="1">この先サロン　</label>
   </div>
   <ng-container *ngIf="paid.value">
     <label>月額<input type="number" min="50" max="100000" name="amount" step="100" [formControl]="amount" />円</label>
@@ -16,8 +16,4 @@
       <label><input type="radio" name="prorate" [formControl]="prorate" [value]="true" [checked]="prorate.value">日割り清算する</label>
     </div>
   </ng-container>
-  <input type="submit" value="保存" [disabled]="roomForm.pristine || roomForm.invalid || roomForm.submitted" />
-  <input type="button" value="取消" (click)="undoRoom(room)" [disabled]="roomForm.pristine" />
 </form>
-<app-tiny2 *ngIf="room.contents && room.auth>=500" [rid]="room.id"></app-tiny2>
-<span *ngIf="room.auth<500 || !room.contents&&room.auth===500">この部屋の編集権限がありません</span>
