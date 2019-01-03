@@ -8,7 +8,7 @@
     <app-member [user]="user" [room]="room"></app-member>
   </mat-sidenav>
   <mat-sidenav-content>
-    <mat-toolbar color="primary" [class.paid]="room.price" [class.logout]="!user.uid || save">
+    <mat-toolbar color="primary" [class.paid]="room.price" [class.logout]="!user.uid" [class.save]="save">
       <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawerL.toggle()">
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>

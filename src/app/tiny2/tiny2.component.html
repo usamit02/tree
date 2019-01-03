@@ -8,7 +8,7 @@
         </div>
         <progress *ngIf="story.upload" [value]="progress.load" [max]="progress.total"></progress>
       </div>
-      <div class=" tiny" [innerHtml]="story.txt | safe: 'html'"></div>
+      <div class="tiny" [innerHtml]="story.txt | safe: 'html'"></div>
     </div>
   </ng-container>
 </div>
