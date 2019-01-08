@@ -10,6 +10,7 @@ import { Room } from '../class';
 })
 export class TreeComponent implements OnInit {
   @Input() user;
+  @Output() getrooms = new EventEmitter();
   @Output() selected = new EventEmitter<Room>();
   @ViewChild('tree') tree;
   rooms = [];
@@ -121,9 +122,9 @@ export class TreeComponent implements OnInit {
   }
   add = (tree) => {
     let node = this.contextMenu.node;
-    this.mysql.query("owner/room.php", { parent: node.id }).subscribe((data: any) => {
+    this.mysql.query("owner/room.php", { parent: node.id }).subscribe((data: any) => {//新しい部屋を追加してidを取得
       if (data.maxId) {
-        let room = new Room(data.maxId, node.id, "新しい部屋", 0);
+        let room = new Room(data.maxId, node.id, "新しい部屋", 0, "", 0, 0, 0, 0, 0);
         let rooms = JSON.parse(this.room);
         rooms.push(room);
         this.room = JSON.stringify(rooms);
@@ -219,7 +220,7 @@ export class TreeComponent implements OnInit {
       sql += "DELETE FROM t01room WHERE id=" + rooms[i].id + ";\n";
     }
     console.log(sql);
-    this.mysql.query("owner/room.php", { uid: this.user.uid, sql: sql.substr(0, sql.length - 1) }).subscribe((data: any) => {
+    this.mysql.query("owner/room.php", { uid: this.user.id, sql: sql.substr(0, sql.length - 1) }).subscribe((data: any) => {
       if (data.msg === "ok") {
         this.change = false;
         this.getNode();
@@ -237,7 +238,7 @@ export class TreeComponent implements OnInit {
     this.getNode();
   }
   public getNode() {
-    this.mysql.query("owner/room.php", { uid: this.user.uid }).subscribe((rooms: any) => {
+    this.mysql.query("owner/room.php", { uid: this.user.id }).subscribe((rooms: any) => {
       this.nodes = [];
       var allRooms = [];
       for (let i = 0; i < rooms.length; i++) {
@@ -247,6 +248,7 @@ export class TreeComponent implements OnInit {
         this.nodes.push(rooms[i][0]);
       }
       this.room = JSON.stringify(allRooms);
+      this.getrooms.emit(this.room);
     });
     function addRooms(parent, rooms, auth) {
       var childs = [];

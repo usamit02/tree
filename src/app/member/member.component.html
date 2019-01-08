@@ -18,11 +18,10 @@
       <input id="search" autofocus (blur)="clearSearch()" (keyup.enter)="search($event.target.value)" (keyup.esc)="clearSearch()"
         placeholder="検索" />
     </span>
-    <span *ngIf="node.data.id < 9999" [class.my]="node.data.my" [class.noedit]="node.data.id > room.auth || node.data.id <= 10">{{
-      node.data.na
-      }}{{node.data.num}}
+    <span *ngIf="node.data.id < 9999" [class.my]="node.data.my" [class.noedit]="node.data.id > room.auth || node.data.id <= 10">
+      {{node.data.na}}{{node.data.num}}
     </span>
-    <span *ngIf="!(node.data.id >= 0)" [class.my]="node.data.id===user.uid" [class.noedit]="node.data.room !== room.id || node.data.auth > room.auth">
+    <span *ngIf="!(node.data.id >= 0)" [class.my]="node.data.id===user.id" [class.noedit]="node.data.room !== room.id || node.data.auth > room.auth">
       <img class="avatar" [src]="node.data.avatar">{{node.data.na }}</span>
     <span *ngIf="node.data.id > 9999">{{ node.data.na }}</span>
   </ng-template>
@@ -37,5 +36,9 @@
     <li *ngIf="!(contextMenu.node.data.id >= 0) && contextMenu.node.parent.data.id ===1" (click)="ban(tree)"><a>強制退会</a></li>
     <li *ngIf="contextMenu.node.parent.data.id ===0" (click)="OK()"><a>OK</a></li>
     <li *ngIf="contextMenu.node.parent.data.id ===0" (click)="NG(tree)"><a>NG</a></li>
+    <li *ngIf="!(contextMenu.node.data.id >= 0) && contextMenu.node.parent.data.id > 10 && room.auth >= 9000">
+      <input type="number" [value]="contextMenu.node.data.rate">％
+      <div><label></label><button (click)=rate()>～{{remainRate + contextMenu.node.data.rate}}％</button></div>
+    </li>
   </ul>
 </div>

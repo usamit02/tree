@@ -14,14 +14,14 @@ import { TableComponent } from './table/table.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HomeComponent } from './home/home.component';
 import { MemberComponent } from './member/member.component';
-import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { TinyComponent } from './tiny/tiny.component';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { SafePipe } from './safe.pipe';
 import { Tiny2Component } from './tiny2/tiny2.component';
 import { EditorModule } from '@tinymce/tinymce-angular';
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireAuthModule } from 'angularfire2/auth';
+import { NoticeComponent } from './notice/notice.component';
+import { CashComponent } from './cash/cash.component';
 const firebaseConfig = {
   apiKey: 'AIzaSyAvD0ftnENGOCvE9cOPB8AklV7JeMY4cfg',
   authDomain: 'blogersguild1.firebaseapp.com',
@@ -41,7 +41,9 @@ const firebaseConfig = {
     MemberComponent,
     TinyComponent,
     SafePipe,
-    Tiny2Component
+    Tiny2Component,
+    NoticeComponent,
+    CashComponent
   ],
   imports: [
     BrowserModule,
@@ -62,8 +64,6 @@ const firebaseConfig = {
     MatSortModule,
     FormsModule,
     ReactiveFormsModule,
-    CKEditorModule,
-    FlexLayoutModule,
     EditorModule,
     AngularFireModule.initializeApp(firebaseConfig),
     AngularFireAuthModule,

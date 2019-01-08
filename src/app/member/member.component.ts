@@ -3,6 +3,7 @@ import { MysqlService } from '../service/mysql.service';
 import { TREE_ACTIONS, KEYS, ITreeOptions, TreeNode, TreeModel, TreeDropDirective } from 'angular-tree-component';
 import { Room } from '../class';
 import * as _ from 'lodash';
+declare var $;
 @Component({
   selector: 'app-member',
   templateUrl: './member.component.html',
@@ -24,6 +25,7 @@ export class MemberComponent implements OnInit {
   users: string;
   rooms = [];
   nodes = [];
+  remainRate: number;
   options: ITreeOptions = {
     displayField: 'na',
     isExpandedField: 'expanded',
@@ -121,7 +123,7 @@ export class MemberComponent implements OnInit {
     return this.sourceNode.treeModel.canMoveNode(this.sourceNode, { parent: this.contextMenu.node, index: 0 });
   }
   OK() {
-    this.mysql.query("pay/roompay.php", { uid: this.contextMenu.node.data.id, rid: this.room.id, ok: this.user.uid }).subscribe((data: any) => {
+    this.mysql.query("pay/roompay.php", { uid: this.contextMenu.node.data.id, rid: this.room.id, ok: this.user.id }).subscribe((data: any) => {
       if (data.msg === "ok") {
         this.getNode(this.room.id);
       } else {
@@ -140,7 +142,7 @@ export class MemberComponent implements OnInit {
     }
   }
   NGban(tree) {
-    this.mysql.query("pay/roompay.php", { uid: this.contextMenu.node.data.id, rid: this.room.id, ban: this.user.uid }).subscribe((data: any) => {
+    this.mysql.query("pay/roompay.php", { uid: this.contextMenu.node.data.id, rid: this.room.id, ban: this.user.id }).subscribe((data: any) => {
       if (data.msg === "ok") {
         this.del(tree);
         this.change = false;
@@ -159,6 +161,17 @@ export class MemberComponent implements OnInit {
     tree.treeModel.update();
     this.closeMenu();
     this.change = true;
+  }
+  rate = () => {
+    let rate = Number($(".menu input").val());
+    if (rate < 0 || rate > this.remainRate + this.contextMenu.node.data.rate) {
+      alert("0から" + this.remainRate + "までの配分率を入力。\n多くしたいときは他の人の配分率を減らして。");
+    } else {
+      this.remainRate += this.contextMenu.node.data.rate - rate;
+      this.contextMenu.node.data.rate = rate;
+      this.closeMenu();
+      this.change = true;
+    }
   }
   filterFn(value: string, treeModel: TreeModel) {
     treeModel.filterNodes((node: TreeNode) => fuzzysearch(value, node.data.name));
@@ -188,17 +201,18 @@ export class MemberComponent implements OnInit {
     nodes.forEach((node) => {
       let user = users.filter(user => { return user.id === node.id });
       if (user.length) {
-        if (node.auth !== user[0].auth || node.idx !== user[0].idx) {
-          sql += "UPDATE t71roomauth SET auth=" + node.auth + ",idx=" + node.idx + " WHERE uid='" + node.id + "' AND rid=" + node.room + ";\n";
+        if (node.auth !== user[0].auth || node.idx !== user[0].idx || node.rate != user[0].rate) {
+          sql += "UPDATE t03staff SET auth=" + node.auth + ",idx=" + node.idx + ",rate=" + node.rate +
+            " WHERE uid='" + node.id + "' AND rid=" + node.room + ";\n";
         }
         users = users.filter(user => { return user.id !== node.id; });
       } else {
-        sql += "INSERT INTO t71roomauth (uid,rid,auth,idx) VALUES ('"
-          + node.id + "'," + node.room + "," + node.auth + "," + node.idx + ");\n";
+        sql += "INSERT INTO t03staff (uid,rid,auth,idx,rate) VALUES ('"
+          + node.id + "'," + node.room + "," + node.auth + "," + node.idx + "," + node.rate + ");\n";
       }
     });
     for (let i = 0; i < users.length; i++) {
-      sql += "DELETE FROM t71roomauth WHERE uid='" + users[i].id + "' AND rid=" + users[i].room + ";\n";
+      sql += "DELETE FROM t03staff WHERE uid='" + users[i].id + "' AND rid=" + users[i].room + ";\n";
     }
     console.log(sql);
     if (sql) {
@@ -234,23 +248,18 @@ export class MemberComponent implements OnInit {
           ]
         }
       ]
+      this.remainRate = 100;
       this.nodes.forEach(node => {
         let children = users.filter(user => { return user.auth === node.id; });
         if (children.length) {
-          let user = this.user;
-          if (children.some(child => { return child.id === this.user.uid; })) {
-            node.my = true;
-          }
+          children.forEach(child => {//if (children.some(child => { return child.id === this.user.id; })) {
+            if (child.id === this.user.id) node.my = true;
+            if (child.rate) this.remainRate -= child.rate;
+          });
           node.children = children;
           node.num = '(' + children.length + ')';
         }
       });
-      console.log("user:");
-      console.log(this.user);
-      console.log("member:");
-      console.log(this.nodes);
-      console.log("room:");
-      console.log(this.room);
     });
   }
   search(x: string) {
@@ -261,7 +270,7 @@ export class MemberComponent implements OnInit {
       }
       if (users.length) {
         for (let i = 0; i < users.length; i++) {
-          let node = { id: users[i].id, na: users[i].na, avatar: users[i].avatar, room: this.room.id, auth: 0 };
+          let node = { id: users[i].id, na: users[i].na, avatar: users[i].avatar, room: this.room.id, auth: 0, rate: 0 };
           this.nodes[7].children.push(node);
         }
       } else {

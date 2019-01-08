@@ -2,6 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Room } from '../class';
 import { FormControl, FormBuilder, Validators } from '@angular/forms';
 import { MysqlService } from '../service/mysql.service';
+
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -18,6 +19,7 @@ export class HomeComponent {
     return this._room;
   }
   @Input() user;
+  @Input() rooms;
   @Input() exec;
   @Output() save = new EventEmitter<string>();
   discription = new FormControl(

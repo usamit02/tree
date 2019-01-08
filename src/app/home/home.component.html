@@ -1,3 +1,4 @@
+<app-notice [user]="user" [room]="room" [rooms]="rooms"></app-notice>
 <form *ngIf="room.auth>=1000" [formGroup]="roomForm">
   <label>紹介文　<textarea name="discription" cols="70" rows="5" placeholder="部屋の目的や活動内容など" [formControl]="discription"></textarea></label>
   <div style="display:flex;">

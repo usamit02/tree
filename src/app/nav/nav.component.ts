@@ -16,8 +16,9 @@ export class NavComponent {
   @ViewChild(TreeComponent) protected tree: TreeComponent;
   //user = { uid: "AMavP9Icrfe7GbbMt0YCXWFWIY42" };
   //user = { uid: "b5FnwHPFmsVwym8vze34PUfeF003" };
-  user = { uid: "", displayName: "", photoURL: "" };
+  user = { id: "", na: "", avatar: "", p: 0 };
   room: Room;
+  rooms;
   save;
   exec;
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
@@ -27,24 +28,27 @@ export class NavComponent {
 
   constructor(private breakpointObserver: BreakpointObserver,
     private afAuth: AngularFireAuth, private mysql: MysqlService) {
-    this.room = new Room(0, 0, "ログインしてください");
+    this.room = new Room(-1, 0, "ログインしてください");
   }
   ngOnInit() {
     firebase.auth().onAuthStateChanged((user) => {
       if (user.uid) {
-        this.user = user;
-        this.room = new Room(0, 0, "お知らせ", 0, "", 0);
-        this.mysql.query("user.php", { uid: this.user.uid, na: this.user.displayName, avatar: this.user.photoURL }).subscribe((res: any) => {
+        this.room = new Room(0, 0, "お知らせ    ", 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        this.mysql.query("user.php", { uid: user.uid, na: user.displayName, avatar: user.photoURL }).subscribe((res: any) => {
           if (res.msg !== "ok") {
             alert(res.msg);
           }
+          this.user = { id: res.id, na: res.na, avatar: res.avatar, p: res.p }
         });
       } else {
-        this.user = { uid: "", displayName: "", photoURL: "" };
-        this.room = new Room(0, 0, "ログインしてください");
+        this.user = { id: "", na: "", avatar: "", p: 0 };
+        this.room = new Room(-1, 0, "ログインしてください");
       }
     });
     console.log(this.user);
+  }
+  onGetRooms(rooms) {
+    this.rooms = JSON.parse(rooms);
   }
   onSelected(room) {
     this.room = room;
@@ -79,7 +83,7 @@ export class NavComponent {
   }
   logout() {
     this.afAuth.auth.signOut();
-    this.user = { uid: "", displayName: "", photoURL: "" };
+    this.user = { id: "", na: "", avatar: "", p: 0 };
     this.room = new Room(0, 0, "ログインしてください");
   }
 }
