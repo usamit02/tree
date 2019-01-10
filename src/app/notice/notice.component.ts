@@ -8,7 +8,7 @@ import { MatPaginator, MatTableDataSource } from '@angular/material';
 })
 export class NoticeComponent implements OnInit {
   displayedColumns: string[];
-  data;
+  data = new MatTableDataSource<PeriodicElement>(DUMMY);
   pageSize: number;
   pageSizeOptions: number[];
   pager;
@@ -43,3 +43,9 @@ export class NoticeComponent implements OnInit {
     }
   }
 }
+const DUMMY: PeriodicElement[] = [{ day: "", room: "", msg: "読み込み中..." }]
+interface PeriodicElement {
+  day: string;
+  room: string;
+  msg: string;
+} 

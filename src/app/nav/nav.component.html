@@ -32,10 +32,11 @@
       <button (click)="login('twitter')">twitter</button>
       <button (click)="login('facebook')">facebook</button>
       <button (click)="login('google')">google</button>
+      <button style="display:none;" id="dummy" (click)="login('dummy')">dummy</button>
     </div>
     <app-home [user]="user" [room]="room" [rooms]="rooms" [exec]="exec" (save)=saveCTL($event)></app-home>
     <p></p>
     <app-tiny2 *ngIf="room.story && room.auth>=500" [rid]="room.id" [exec]="exec" (save)=saveCTL($event)></app-tiny2>
-    <span *ngIf="room.auth<500 || !room.story&&room.auth===500">この部屋の編集権限がありません</span>
+    <span *ngIf="room.auth<500 || !room.story&&room.auth===500" style="color:gray;">※この部屋の編集権限がありません</span>
   </mat-sidenav-content>
 </mat-sidenav-container>

@@ -1,3 +1,15 @@
-<p>
-  cash works!
-</p>
+<mat-toolbar color="primary" [class.paid]="room.price" [class.logout]="!user.id">
+  <span>{{room.na}}</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <span *ngIf="(room.id===0 || room.id===900) && user.id">{{user.p | number}}ポイント</span>
+  <span class="fill-space"></span>
+  <button mat-icon-button (click)="logout()">
+    <mat-icon>exit_to_app</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div *ngIf="!user.id">
+  <button (click)="login('twitter')">twitter</button>
+  <button (click)="login('facebook')">facebook</button>
+  <button (click)="login('google')">google</button>
+  <button id="dummy" (click)="login('dummy')">dummy</button>
+</div>

@@ -352,7 +352,7 @@ export class Tiny2Component implements OnInit {
   saveStory() {
     const rid = this.rid, storys = this.storys, txts = this.txts, medias = this.medias, pays = this.pays;
     var i = 0, sql = "", reload = false, newStoryLength = 0;
-    $(".row").each((index, row) => {
+    $("#wrap .row").each((index, row) => {
       const idx = Number($(row).attr('id'));
       const mceId = $(row).children(".tiny").attr('id');
       if ($(row).css('display') === 'none') {//削除行

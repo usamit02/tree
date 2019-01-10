@@ -1,5 +1,5 @@
 <mat-toolbar color="primary">
-  <input id="filter" #filter (keyup)="tree.treeModel.filterNodes(filter.value)" placeholder="filter nodes" />
+  <input id="filter" #filter (keyup)="tree.treeModel.filterNodes(filter.value)" placeholder="部屋を検索" />
   <button mat-icon-button (click)="tree.treeModel.clearFilter()">
     <mat-icon>clear</mat-icon>
   </button>
