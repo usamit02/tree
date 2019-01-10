@@ -1,4 +1,4 @@
-<mat-toolbar color="primary" [class.paid]="room.price" [class.logout]="!user.id">
+<mat-toolbar color="primary" [class.logout]="!user.id">
   <span>{{room.na}}</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <span *ngIf="(room.id===0 || room.id===900) && user.id">{{user.p | number}}ポイント</span>
   <span class="fill-space"></span>

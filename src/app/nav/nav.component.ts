@@ -6,6 +6,8 @@ import { TreeComponent } from "../tree/tree.component";
 import * as firebase from 'firebase';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { MysqlService } from '../service/mysql.service';
+import { Room } from '../class';
+
 @Component({
   selector: 'app-nav',
   templateUrl: './nav.component.html',
@@ -16,7 +18,7 @@ export class NavComponent {
   //user = { uid: "AMavP9Icrfe7GbbMt0YCXWFWIY42" };
   //user = { uid: "b5FnwHPFmsVwym8vze34PUfeF003" };
   user = { id: "", na: "", avatar: "", p: 0 };
-  room = { id: -1, na: "ログインしてください" };
+  room = new Room(-1, 0, "ログインしてください");
   rooms;
   save;
   exec;
@@ -27,24 +29,22 @@ export class NavComponent {
 
   constructor(private breakpointObserver: BreakpointObserver,
     private afAuth: AngularFireAuth, private mysql: MysqlService) {
-    //this.room = new Room(-1, 0, "ログインしてください");
   }
   ngOnInit() {
     firebase.auth().onAuthStateChanged((user) => {
       if (user.uid) {
-        //this.room = new Room(0, 0, "お知らせ    ", 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);        
+        this.room = new Room(0, 0, "お知らせ    ", 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         this.mysql.query("user.php", { uid: user.uid, na: user.displayName, avatar: user.photoURL }).subscribe((res: any) => {
           if (res.msg !== "ok") {
             alert(res.msg);
           }
           this.user = { id: res.id, na: res.na, avatar: res.avatar, p: res.p };
-          this.room = { id: 0, na: "お知らせ" };
           let dummy = document.getElementById("dummy");
           dummy.click();
         });
       } else {
         this.user = { id: "", na: "", avatar: "", p: 0 };
-        this.room = { id: -1, na: "ログインしてください" }//new Room(-1, 0, "ログインしてください");
+        this.room = new Room(-1, 0, "ログインしてください");
       }
     });
     console.log(this.user);
@@ -86,6 +86,6 @@ export class NavComponent {
   logout() {
     this.afAuth.auth.signOut();
     this.user = { id: "", na: "", avatar: "", p: 0 };
-    this.room = { id: -1, na: "ログインしてください" }//new Room(0, 0, "ログインしてください");
+    this.room = new Room(0, 0, "ログインしてください");
   }
 }
