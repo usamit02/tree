@@ -1,0 +1,4 @@
+<div class="row" *ngFor="let story of storys">
+  <div class="txt" [innerHtml]="story.txt | safe: 'html'"></div>
+  <div class="media" [innerHtml]="story.media | safe: 'html'"></div>
+</div>

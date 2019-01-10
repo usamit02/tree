@@ -13,7 +13,7 @@
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>
       <span>{{room.na}}</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <span *ngIf="room.id===0 && user.id">{{user.p | number}}ポイント</span>
+      <span *ngIf="(room.id===0 || room.id===900) && user.id">{{user.p | number}}ポイント</span>
       <span class="fill-space"></span>
       <button *ngIf="save=='saveroom'||save=='savestory'" mat-icon-button (click)="exec=save">
         <mat-icon>save</mat-icon>

@@ -149,6 +149,7 @@ export class MemberComponent implements OnInit {
       } else {
         alert(data.error + "\nC-Lifeまでお問合せください。");
       }
+      this.contextMenu = null;
     });
   }
   del = (tree) => {

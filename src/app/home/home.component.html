@@ -1,4 +1,6 @@
-<app-notice [user]="user" [room]="room" [rooms]="rooms"></app-notice>
+<app-notice *ngIf="room.id <900 || room.id >=1000" [user]="user" [room]="room" [rooms]="rooms"></app-notice>
+<app-book *ngIf="room.id===900" [user]="user"></app-book>
+<app-story *ngIf="room.id>=950 && room.id< 1000" [user]="user" [room]="room"></app-story>
 <form *ngIf="room.auth>=1000" [formGroup]="roomForm">
   <label>紹介文　<textarea name="discription" cols="70" rows="5" placeholder="部屋の目的や活動内容など" [formControl]="discription"></textarea></label>
   <div style="display:flex;">

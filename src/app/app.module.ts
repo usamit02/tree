@@ -22,6 +22,8 @@ import { AngularFireModule } from 'angularfire2';
 import { AngularFireAuthModule } from 'angularfire2/auth';
 import { NoticeComponent } from './notice/notice.component';
 import { CashComponent } from './cash/cash.component';
+import { BookComponent } from './book/book.component';
+import { StoryComponent } from './story/story.component';
 const firebaseConfig = {
   apiKey: 'AIzaSyAvD0ftnENGOCvE9cOPB8AklV7JeMY4cfg',
   authDomain: 'blogersguild1.firebaseapp.com',
@@ -43,7 +45,9 @@ const firebaseConfig = {
     SafePipe,
     Tiny2Component,
     NoticeComponent,
-    CashComponent
+    CashComponent,
+    BookComponent,
+    StoryComponent
   ],
   imports: [
     BrowserModule,
