@@ -1,8 +1,9 @@
 import { Component, OnInit, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { MysqlService } from '../service/mysql.service';
 import { TREE_ACTIONS, KEYS, ITreeOptions, TreeNode, TreeModel, TreeDropDirective } from 'angular-tree-component';
-import * as _ from 'lodash';
 import { Room } from '../class';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { AngularFireStorage } from 'angularfire2/storage';
 @Component({
   selector: 'app-tree',
   templateUrl: './tree.component.html',
@@ -146,9 +147,12 @@ export class TreeComponent implements OnInit {
     this.change = true;
     let node = this.contextMenu.node;
     let parentNode = node.realParent ? node.realParent : node.treeModel.virtualRoot;
-    _.remove(parentNode.data.children, function (child) {
-      return child === node.data;
-    });
+    if (node.data.children && !confirm("下層部屋もまとめて削除しますか？")) {
+      for (let i = 0; i < node.data.children.length; i++) {
+        parentNode.data.children.push(node.data.children[i]);
+      }
+    }
+    parentNode.data.children = parentNode.data.children.filter(child => { return child !== node.data; });//_.remove(parentNode.data.children, function (child) {return child === node.data;});    
     tree.treeModel.update();
     this.closeMenu();
     if (node.parent.data.children.length === 0) {
@@ -163,7 +167,7 @@ export class TreeComponent implements OnInit {
     this.change = false;
   }
   save(treeModel: TreeModel) {
-    var nodes = [];
+    let nodes = [];
     function addNodes(node) {
       if (node.children) {
         for (let i = 0; i < node.children.length; i++) {
@@ -181,12 +185,12 @@ export class TreeComponent implements OnInit {
       nodes.push(treeModel.nodes[i]);
       addNodes(treeModel.nodes[i]);
     }
-    var sql = "";
-    var rooms = JSON.parse(this.room);
-    var maxId = Math.max(...rooms.map(room => room.id));
+    let sql = ""; let dels = [];
+    let rooms = JSON.parse(this.room);
+    let maxId = Math.max(...rooms.map(room => room.id));
     const noProp = ["auth", "children", "amount", "billing_day", "trial_days", "price"];
     nodes.forEach((node) => {
-      var val = "";
+      let val = "";
       let room = rooms.filter(room => { return room.id == node.id });
       if (room.length) {
         for (const p of Object.keys(room[0])) {
@@ -201,7 +205,7 @@ export class TreeComponent implements OnInit {
         sql += val ? "UPDATE t01room SET " + val.substr(0, val.length - 1) + " WHERE id=" + room[0].id + ";\n" : "";
         rooms = rooms.filter(room => { return room.id != node.id; });
       } else {
-        var key = "";
+        let key = "";
         if (node.id > 100000000000) { maxId++; node.id = maxId; }
         for (const p of Object.keys(node)) {
           if (!noProp.filter(prop => { return p === prop; }).length) {
@@ -217,19 +221,35 @@ export class TreeComponent implements OnInit {
       }
     });
     for (let i = 0; i < rooms.length; i++) {
-      sql += "DELETE FROM t01room WHERE id=" + rooms[i].id + ";\n";
+      dels.push(rooms[i].id);//sql += "DELETE FROM t01room WHERE id=" + rooms[i].id + ";\n";
     }
     console.log(sql);
-    this.mysql.query("owner/room.php", { uid: this.user.id, sql: sql.substr(0, sql.length - 1) }).subscribe((data: any) => {
+    this.mysql.query("owner/room.php", {
+      uid: this.user.id, sql: sql.substr(0, sql.length - 1), dels: JSON.stringify(dels)
+    }).subscribe((data: any) => {
       if (data.msg === "ok") {
         this.change = false;
         this.getNode();
+        for (let i = 0; i < dels.length; i++) {
+          let dbcon = this.db.collection("room").doc(dels[i].toString()).collection('chat');
+          dbcon.get().subscribe(query => {
+            query.forEach(doc => {
+              let img = doc.data().img;
+              if (img) {
+                this.storage.ref("room/" + dels[i] + "/" + img).delete();
+                this.storage.ref("room/" + dels[i] + "/org/" + img).delete();
+              }
+              dbcon.doc(doc.id).delete();
+            });
+          });
+          this.db.collection("room").doc(dels[i].toString()).delete();
+        }
       } else {
-        alert("データベースエラー C-Lifeまでお問合せください。");
+        alert("データベースエラー C-Lifeまでお問合せください。\n" + data.msg);
       }
     });
   }
-  constructor(private mysql: MysqlService) { }
+  constructor(private mysql: MysqlService, private db: AngularFirestore, private storage: AngularFireStorage) { }
 
   ngOnInit() {
 

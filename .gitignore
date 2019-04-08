@@ -37,6 +37,5 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
-#src/environments/environment.ts
 src/app/tiny2/tiny2_0.component.ts
 src/app/service/mysql.service.ts

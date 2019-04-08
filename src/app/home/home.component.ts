@@ -10,7 +10,6 @@ import { MysqlService } from '../service/mysql.service';
 })
 export class HomeComponent {
   private _room: Room;
-  pay: boolean = false;
   @Input()
   set room(_room: Room) {
     this.undoRoom(_room);
@@ -27,7 +26,7 @@ export class HomeComponent {
   );
   chat = new FormControl();
   story = new FormControl();
-  paid = new FormControl();
+  plan = new FormControl();
   amount = new FormControl(
     Validators.min(50),
     Validators.max(10000)
@@ -49,7 +48,7 @@ export class HomeComponent {
     discription: this.discription,
     chat: this.chat,
     story: this.story,
-    paid: this.paid,
+    plan: this.plan,
     amount: this.amount,
     billing_day: this.billing_day,
     trial_days: this.trial_days,
@@ -77,31 +76,31 @@ export class HomeComponent {
     }
   }
   changestory() {
-    if (!this.story.value) this.paid.reset(false);
+    if (!this.story.value) this.plan.reset(0);
   }
   saveRoomForm() {
     console.log(this.roomForm.value);
     let params: any = { room: {}, plan: {} };
-    const planProp = ['amount', 'billing_day', 'trial_days', 'auth_days'];
+    const planProp = ['amount', 'billing_day', 'trial_days', 'auth_days', 'prorate'];
     for (const p of Object.keys(this.roomForm.value)) {
       if (!planProp.filter(prop => { return p === prop; }).length && !(this.roomForm.value[p] == this.room[p] || this.roomForm.value[p] == undefined)) {
         params.room[p] = this.roomForm.value[p] === false ? 0 : this.roomForm.value[p];
       }
     }
-    if (this.roomForm.value.paid && planProp.filter(p => { return !(this.roomForm.value[p] == this.room[p] || this.roomForm.value[p] == undefined); }).length) {
+    if (this.roomForm.value.plan && planProp.filter(p => { return !(this.roomForm.value[p] == this.room[p] || this.roomForm.value[p] == undefined); }).length) {
       for (let i = 0; i < planProp.length; i++) {
         params.plan[planProp[i]] = this.roomForm.value[planProp[i]] === false ? 0 : this.roomForm.value[planProp[i]];
       }
     }
-    this.mysql.query("owner/save.php", { roomForm: JSON.stringify(params), roomId: this.room.id }).subscribe(
-      (data: any) => {
-        if (data.msg === "ok") {
+    this.mysql.query("owner/save.php", { roomForm: JSON.stringify(params), rid: this.room.id, na: this.room.na }).subscribe(
+      (res: any) => {
+        if (res.msg === "ok") {
           for (const p of Object.keys(this.roomForm.value)) {
             this._room[p] = this.roomForm.value[p];
           }
           this.save.emit("roomdone");
         } else {
-          alert("データベースエラー C-Lifeまでお問合せください。");
+          alert("データベースエラー C-Lifeまでお問合せください。\n" + res.msg);
         }
       }, error => {
         alert("通信エラー" + error.statusText);
@@ -112,8 +111,8 @@ export class HomeComponent {
     this.discription.reset(_room.discription);
     this.chat.reset(_room.chat);
     this.story.reset(_room.story);
-    this.pay = _room.plan ? true : false;
-    this.paid.reset(this.pay);
+    let plan = _room.plan ? 1 : 0;
+    this.plan.reset(plan);
     let amount = _room.amount > 49 ? _room.amount : 3000;
     this.amount.reset(amount);
     let billing_day = _room.billing_day ? _room.billing_day : 0;
@@ -122,8 +121,38 @@ export class HomeComponent {
     this.trial_days.reset(trial_days);
     let auth_days = _room.auth_days || _room.auth_days === 0 ? _room.auth_days : 3;
     this.auth_days.reset(auth_days);
-    //let prorate = _room.prorate ? true : false;
-    this.prorate.reset(_room.prorate);
+    let prorate = _room.prorate ? true : false;
+    this.prorate.reset(prorate);
     this._room = _room;
   }
 }
+/*
+saveRoomForm() {
+  console.log(this.roomForm.value);
+  let params: any = { room: {}, plan: {} };
+  const planProp = ['amount', 'billing_day', 'trial_days', 'auth_days'];
+  for (const p of Object.keys(this.roomForm.value)) {
+    if (!planProp.filter(prop => { return p === prop; }).length && !(this.roomForm.value[p] == this.room[p] || this.roomForm.value[p] == undefined)) {
+      params.room[p] = this.roomForm.value[p] === false ? 0 : this.roomForm.value[p];
+    }
+  }
+  if (this.roomForm.value.plan && planProp.filter(p => { return !(this.roomForm.value[p] == this.room[p] || this.roomForm.value[p] == undefined); }).length) {
+    for (let i = 0; i < planProp.length; i++) {
+      params.plan[planProp[i]] = this.roomForm.value[planProp[i]] === false ? 0 : this.roomForm.value[planProp[i]];
+    }
+  }
+  this.mysql.query("owner/save.php", { roomForm: JSON.stringify(params), roomId: this.room.id }).subscribe(
+    (data: any) => {
+      if (data.msg === "ok") {
+        for (const p of Object.keys(this.roomForm.value)) {
+          this._room[p] = this.roomForm.value[p];
+        }
+        this.save.emit("roomdone");
+      } else {
+        alert("データベースエラー C-Lifeまでお問合せください。");
+      }
+    }, error => {
+      alert("通信エラー" + error.statusText);
+    });
+}
+*/

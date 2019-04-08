@@ -7,9 +7,9 @@
     <label>機能　</label>
     <label><input type="checkbox" name="chat" [formControl]="chat" [value]="1" />チャット　</label>
     <label><input type="checkbox" name="story" (change)="changestory()" [formControl]="story" [value]="1" />ストーリー　</label>
-    <label *ngIf="story.value"><input type="checkbox" name="paid" [formControl]="paid" [value]="1">この先サロン　</label>
+    <label *ngIf="story.value"><input type="checkbox" name="plan" [formControl]="plan" [value]="1">この先サロン　</label>
   </div>
-  <ng-container *ngIf="paid.value">
+  <ng-container *ngIf="plan.value">
     <label>月額<input type="number" min="50" max="100000" name="amount" step="100" [formControl]="amount" />円</label>
     <label>　毎月<input type="number" min="0" max="31" [formControl]="billing_day" name="billing_day" />日引落</label>
     <label>　審査期間<input type="number" min="0" max="30" [formControl]="auth_days" name="auth_days" />日間</label>

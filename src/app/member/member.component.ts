@@ -12,6 +12,7 @@ declare var $;
 export class MemberComponent implements OnInit {
   @Input()
   set room(room: Room) {
+    this.contextMenu = null;
     this.getNode(room);
     this._room = room;
   }
@@ -42,7 +43,7 @@ export class MemberComponent implements OnInit {
             ('room' in node.data && node.data.room !== this.room.id) ||
             ('auth' in node.data && node.data.auth > this.room.auth) ||
             !('auth' in node.data) && node.data.id > this.room.auth) {
-            return this.closeMenu();
+            return this.contextMenu = null;
           }
           this.contextMenu = {
             node: node,
@@ -51,7 +52,7 @@ export class MemberComponent implements OnInit {
           };
         },
         click: (tree: TreeModel, node: TreeNode, e: MouseEvent) => {
-          this.closeMenu();
+          this.contextMenu = null;
           this.selected.emit(node.data);
           TREE_ACTIONS.TOGGLE_ACTIVE(tree, node, e);
         },
@@ -95,13 +96,11 @@ export class MemberComponent implements OnInit {
   editNode: TreeNode = null;
   doCut = false;
   change = false;
-  closeMenu = () => {
-    this.contextMenu = null;
-  }
+  //closeMenu = () => {this.contextMenu = null;}
   cut = () => {
     this.sourceNode = this.contextMenu.node;
     this.doCut = true;
-    this.closeMenu();
+    this.contextMenu = null;
   }
   paste = () => {
     if (!this.canPaste()) {
@@ -114,7 +113,7 @@ export class MemberComponent implements OnInit {
     this.sourceNode = null;
     this.change = true;
     nodeNum(this.tree);
-    this.closeMenu();
+    this.contextMenu = null;
   }
   canPaste = () => {
     if (!this.sourceNode) {
@@ -125,10 +124,11 @@ export class MemberComponent implements OnInit {
   OK() {
     this.mysql.query("pay/roompay.php", { uid: this.contextMenu.node.data.id, rid: this.room.id, ok: this.user.id }).subscribe((data: any) => {
       if (data.msg === "ok") {
-        this.getNode(this.room.id);
+        this.getNode(this.room);
       } else {
-        alert(data.error + "\nC-Lifeまでお問合せください。");
+        alert(data.error);
       }
+      this.contextMenu = null;
     });
   }
   NG(tree) {
@@ -160,7 +160,7 @@ export class MemberComponent implements OnInit {
     });
     nodeNum(tree);
     tree.treeModel.update();
-    this.closeMenu();
+    this.contextMenu = null;
     this.change = true;
   }
   rate = () => {
@@ -170,7 +170,7 @@ export class MemberComponent implements OnInit {
     } else {
       this.remainRate += this.contextMenu.node.data.rate - rate;
       this.contextMenu.node.data.rate = rate;
-      this.closeMenu();
+      this.contextMenu = null;
       this.change = true;
     }
   }
@@ -208,8 +208,8 @@ export class MemberComponent implements OnInit {
         }
         users = users.filter(user => { return user.id !== node.id; });
       } else {
-        sql += "INSERT INTO t03staff (uid,rid,auth,idx,rate) VALUES ('"
-          + node.id + "'," + node.room + "," + node.auth + "," + node.idx + "," + node.rate + ");\n";
+        sql += "INSERT INTO t03staff (uid,rid,auth,idx,rate,upd) VALUES ('"
+          + node.id + "'," + node.room + "," + node.auth + "," + node.idx + "," + node.rate + "," + dateFormat() + ");\n";
       }
     });
     for (let i = 0; i < users.length; i++) {
@@ -232,7 +232,7 @@ export class MemberComponent implements OnInit {
   ngOnInit() {
 
   }
-  public getNode(room) {
+  public getNode(room: Room) {
     this.mysql.query("owner/member.php", { room: room.id }).subscribe((users: any) => {
       this.users = JSON.stringify(users);
       this.nodes = [
@@ -261,6 +261,7 @@ export class MemberComponent implements OnInit {
           node.num = '(' + children.length + ')';
         }
       });
+      this.tree.treeModel.getNodeById(9999).expand();
     });
   }
   search(x: string) {
@@ -278,8 +279,7 @@ export class MemberComponent implements OnInit {
         this.nodes[7].children.push({ id: 10000, na: "誰もいない..." });
       }
       this.tree.treeModel.update();
-      const node = this.tree.treeModel.getNodeById(9999);
-      node.expand();
+      this.tree.treeModel.getNodeById(9999).expand();
     });
   }
   clearSearch() {
@@ -317,4 +317,13 @@ function nodeNum(tree) {
     let num = tree.treeModel.nodes[i].children.length;
     tree.treeModel.nodes[i].num = num ? "(" + num + ")" : "";
   }
+}
+function dateFormat(date = new Date()) {//MySQL用日付文字列作成'yyyy-M-d H:m:s'
+  var y = date.getFullYear();
+  var m = date.getMonth() + 1;
+  var d = date.getDate();
+  var h = date.getHours();
+  var min = date.getMinutes();
+  var sec = date.getSeconds();
+  return "'" + y + "-" + m + "-" + d + " " + h + ":" + min + ":" + sec + "'";
 }

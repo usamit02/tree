@@ -33,12 +33,12 @@ export class NavComponent {
   ngOnInit() {
     firebase.auth().onAuthStateChanged((user) => {
       if (user.uid) {
-        this.room = new Room(0, 0, "お知らせ    ", 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        this.room = new Room(0, 0, "お知らせ    ", 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         this.mysql.query("user.php", { uid: user.uid, na: user.displayName, avatar: user.photoURL }).subscribe((res: any) => {
           if (res.msg !== "ok") {
             alert(res.msg);
           }
-          this.user = { id: res.id, na: res.na, avatar: res.avatar, p: res.p };
+          this.user = { id: res.user.id, na: res.user.na, avatar: res.user.avatar, p: res.user.p };
           let dummy = document.getElementById("dummy");
           dummy.click();
         });

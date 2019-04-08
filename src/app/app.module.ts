@@ -12,14 +12,16 @@ import { MatToolbarModule, MatButtonModule, MatSidenavModule, MatIconModule, Mat
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { TableComponent } from './table/table.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { EditorModule } from '@tinymce/tinymce-angular';
 import { HomeComponent } from './home/home.component';
 import { MemberComponent } from './member/member.component';
 import { TinyComponent } from './tiny/tiny.component';
 import { SafePipe } from './safe.pipe';
 import { Tiny2Component } from './tiny2/tiny2.component';
-import { EditorModule } from '@tinymce/tinymce-angular';
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireAuthModule } from 'angularfire2/auth';
+import { AngularFirestoreModule } from '@angular/fire/firestore';
+import { AngularFireStorageModule } from 'angularfire2/storage';
 import { NoticeComponent } from './notice/notice.component';
 import { CashComponent } from './cash/cash.component';
 import { BookComponent } from './book/book.component';
@@ -68,9 +70,11 @@ const firebaseConfig = {
     MatSortModule,
     FormsModule,
     ReactiveFormsModule,
-    EditorModule,
     AngularFireModule.initializeApp(firebaseConfig),
     AngularFireAuthModule,
+    AngularFirestoreModule,
+    AngularFireStorageModule,
+    EditorModule,
   ],
   providers: [
     MysqlService

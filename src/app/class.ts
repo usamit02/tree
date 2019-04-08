@@ -5,7 +5,6 @@ export class Room {
     public idx?: number,
     public discription?: string,
     public price?: number,
-    public folder?: number,
     public chat?: number,
     public story?: number,
     public plan?: number,
