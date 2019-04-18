@@ -20,34 +20,37 @@ export class HomeComponent {
   @Input() user;
   @Input() rooms;
   @Input() exec;
+  @Input() hasmember;
   @Output() save = new EventEmitter<string>();
   discription = new FormControl(
     Validators.maxLength(500)
   );
   chat = new FormControl();
   story = new FormControl();
+  shut = new FormControl();
   plan = new FormControl();
-  amount = new FormControl(
+  amount = new FormControl(3000, [
     Validators.min(50),
-    Validators.max(10000)
+    Validators.max(999999)]
   );
-  billing_day = new FormControl(
+  billing_day = new FormControl(0, [
     Validators.min(0),
-    Validators.max(31)
+    Validators.max(31)]
   );
-  trial_days = new FormControl(
+  trial_days = new FormControl(0, [
     Validators.min(0),
-    Validators.max(365)
+    Validators.max(365)]
   );
-  auth_days = new FormControl(
+  auth_days = new FormControl(3, [
     Validators.min(0),
-    Validators.max(30)
+    Validators.max(30)]
   );
   prorate = new FormControl();
   roomForm = this.builder.group({
     discription: this.discription,
     chat: this.chat,
     story: this.story,
+    shut: this.shut,
     plan: this.plan,
     amount: this.amount,
     billing_day: this.billing_day,
@@ -75,13 +78,36 @@ export class HomeComponent {
       this.save.emit("done");
     }
   }
-  changestory() {
+  changeShut() {
+    if (this.shut.value) {
+      this.mysql.query("owner/member.php", { rid: this.room.id }).subscribe((res: any) => {
+        if (res.error) {
+          alert("データベースエラー C-Lifeまでお問合せください。\n" + res.error);
+          this.shut.reset(0);
+        } else if (res.hasmember) {
+          alert("下層部屋に会員（審査中含む）がいるので公開を停止できません。");
+          this.shut.reset(0);
+        } else {
+          alert("この部屋と下層部屋は非公開になります。");
+        }
+      }, error => {
+        alert("通信エラー" + error.statusText);
+      });
+    }
+  }
+  changeStory() {
     if (!this.story.value) this.plan.reset(0);
   }
+  changeProrate(prorate) {
+    if (prorate) {
+      this.billing_day.reset(1);
+    } else {
+      this.billing_day.reset(0);
+    }
+  }
   saveRoomForm() {
-    console.log(this.roomForm.value);
     let params: any = { room: {}, plan: {} };
-    const planProp = ['amount', 'billing_day', 'trial_days', 'auth_days', 'prorate'];
+    const planProp = ['amount', 'billing_day', 'trial_days', 'auth_days', 'prorate'];//t13planの保存項目、他はt01room
     for (const p of Object.keys(this.roomForm.value)) {
       if (!planProp.filter(prop => { return p === prop; }).length && !(this.roomForm.value[p] == this.room[p] || this.roomForm.value[p] == undefined)) {
         params.room[p] = this.roomForm.value[p] === false ? 0 : this.roomForm.value[p];
@@ -111,12 +137,12 @@ export class HomeComponent {
     this.discription.reset(_room.discription);
     this.chat.reset(_room.chat);
     this.story.reset(_room.story);
+    this.shut.reset(_room.shut);
     let plan = _room.plan ? 1 : 0;
     this.plan.reset(plan);
     let amount = _room.amount > 49 ? _room.amount : 3000;
     this.amount.reset(amount);
-    let billing_day = _room.billing_day ? _room.billing_day : 0;
-    this.billing_day.reset(billing_day);
+    this.billing_day.reset(_room.billing_day);
     let trial_days = _room.traial_days ? _room.traial_days : 0;
     this.trial_days.reset(trial_days);
     let auth_days = _room.auth_days || _room.auth_days === 0 ? _room.auth_days : 3;

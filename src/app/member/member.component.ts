@@ -21,6 +21,7 @@ export class MemberComponent implements OnInit {
   }
   @Input() user;
   @Output() selected = new EventEmitter<Room>();
+  @Output() hasmember = new EventEmitter<boolean>();
   @ViewChild('tree') tree;
   private _room: Room;
   users: string;
@@ -39,7 +40,8 @@ export class MemberComponent implements OnInit {
         },
         contextMenu: (tree: TreeModel, node: TreeNode, e: MouseEvent) => {
           e.preventDefault();
-          if (this.contextMenu && node === this.contextMenu.node || (!this.doCut && node.data.id >= 0) ||
+          if (this.contextMenu && node === this.contextMenu.node ||
+            (!this.doCut && node.data.id >= 0 && !(node.data.id === 1 && node.hasChildren)) ||
             ('room' in node.data && node.data.room !== this.room.id) ||
             ('auth' in node.data && node.data.auth > this.room.auth) ||
             !('auth' in node.data) && node.data.id > this.room.auth) {
@@ -152,6 +154,19 @@ export class MemberComponent implements OnInit {
       this.contextMenu = null;
     });
   }
+  banall(tree) {
+    if (confirm("全てのメンバーを退会させてサロンを解散しますか。\n※この操作は取り消しできません。")) {
+      this.mysql.query("pay/ban.php", { rid: this.room.id, ban: this.user.id }).subscribe((data: any) => {
+        if (data.msg === "ok") {
+          this.del(tree);
+          this.change = false;
+        } else {
+          alert(data.error + "\nC-Lifeまでお問合せください。");
+        }
+        this.contextMenu = null;
+      });
+    }
+  }
   del = (tree) => {
     let node = this.contextMenu.node;
     let parentNode = node.realParent ? node.realParent : node.treeModel.virtualRoot;
@@ -262,6 +277,8 @@ export class MemberComponent implements OnInit {
         }
       });
       this.tree.treeModel.getNodeById(9999).expand();
+      let members = users.filter(user => { return user.auth < 2 });
+      this.hasmember.emit(members.length > 0);
     });
   }
   search(x: string) {

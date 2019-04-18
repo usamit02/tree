@@ -22,6 +22,7 @@ export class NavComponent {
   rooms;
   save;
   exec;
+  hasmember: boolean = false;
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
       map(result => result.matches)
@@ -56,6 +57,9 @@ export class NavComponent {
     this.room = room;
     this.save = "";
   }
+  onHasmember(has) {
+    this.hasmember = has;
+  }
   saveCTL(com) {
     if (com === "roomdone") {
       this.tree.getNode();
@@ -87,5 +91,20 @@ export class NavComponent {
     this.afAuth.auth.signOut();
     this.user = { id: "", na: "", avatar: "", p: 0 };
     this.room = new Room(0, 0, "ログインしてください");
+  }
+  get barColor() {
+    let color;
+    if (this.save) {
+      color = "purple";
+    } else if (this.room.shut === 100) {
+      color = "grey";
+    } else if (this.room.price > 0) {
+      color = "green";
+    } else if (!this.user.id) {
+      color = "red";
+    } else {
+      return {};
+    }
+    return { 'background-color': color }
   }
 }

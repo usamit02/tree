@@ -263,14 +263,14 @@ export class TreeComponent implements OnInit {
       var allRooms = [];
       for (let i = 0; i < rooms.length; i++) {
         allRooms = allRooms.concat(rooms[i]);
-        let res = addRooms(rooms[i][0].id, rooms[i], rooms[i][0].auth);
+        let res = addRooms(rooms[i][0].id, rooms[i], rooms[i][0].auth, rooms[i][0].shut);
         if (res.length) rooms[i][0].children = res;
         this.nodes.push(rooms[i][0]);
       }
       this.room = JSON.stringify(allRooms);
       this.getrooms.emit(this.room);
     });
-    function addRooms(parent, rooms, auth) {
+    function addRooms(parent, rooms, auth, shut) {
       var childs = [];
       let children = rooms.filter(node => { return node.parent === parent; });
       for (let i = 0; i < children.length; i++) {
@@ -278,7 +278,10 @@ export class TreeComponent implements OnInit {
         if (children[i].auth === null || children[i].auth < auth) {
           children[i].auth = auth;
         }
-        let res = addRooms(children[i].id, rooms, children[i].auth);
+        if (children[i].shut === null || shut > 99 && children[i].shut < shut) {
+          children[i].shut = shut;
+        }
+        let res = addRooms(children[i].id, rooms, children[i].auth, children[i].shut);
         if (res.length) { children[i].children = res; }
         childs.push(children[i]);
       }

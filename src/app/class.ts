@@ -7,6 +7,7 @@ export class Room {
     public price?: number,
     public chat?: number,
     public story?: number,
+    public shut?: number,
     public plan?: number,
     public prorate?: number,
     public auth?: number,

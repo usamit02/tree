@@ -13,6 +13,8 @@ export class BookComponent implements OnInit {
   pageSizeOptions: number[] = [20, 50, 100];
   pager;
   fee: number = 0;
+  bank = { na: "", branch: "", acctyp: "", accnum: null };
+  inputBank: boolean = true;
   @Input() user;
   @ViewChild(MatPaginator) paginator: MatPaginator;
   constructor(private mysql: MysqlService) { }
@@ -23,9 +25,13 @@ export class BookComponent implements OnInit {
   ngOnChanges() {
     if (this.user.id) {
       this.mysql.query("owner/book.php", { uid: this.user.id }).subscribe((data: any) => {
-        this.data = new MatTableDataSource(data);
+        this.data = new MatTableDataSource(data.book);
         this.data.paginator = this.paginator;
-        this.pager = data.length < 25 ? true : false;
+        this.pager = data.book.length < 25 ? true : false;
+        if (data.bank) {
+          this.bank = data.bank;
+          this.inputBank = false;
+        }
       });
     }
   }
@@ -43,10 +49,34 @@ export class BookComponent implements OnInit {
     if (amount > this.user.p) {
       alert("現在残高" + this.user.p + "ポイントまでしか請求できません。");
       input.value = this.user.p;
+    } else if (amount < 1000) {
+      alert("出金請求は1000ポイントから可能です。");
+      input.value = "1000";
+    } else if (!this.bank.na) {
+      alert("振込先の銀行口座を登録してください。");
     } else {
-      alert(amount + "ポイントを出金請求しました。\nシステム手数料" + this.fee + "円を差し引いた" + (amount - this.fee) + "円が振り込まれます。");
-      input.value = "0";
-      this.user.p -= amount;
+      this.mysql.query("owner/book.php", { uid: this.user.id, amount: amount }).subscribe((res: any) => {
+        if (res.msg === 'ok') {
+          alert(amount + "ポイントを出金請求しました。\nシステム手数料" + this.fee + "円を差し引いた" + (amount - this.fee) + "円が振り込まれます。");
+          input.value = "0";
+          this.user.p -= amount;
+        } else {
+          alert(res.msg);
+        }
+      });
     }
+  }
+  newBank() {
+    this.bank = { na: "", branch: "", acctyp: "", accnum: null };
+    this.inputBank = true;
+  }
+  setBank() {
+    this.mysql.query("owner/book.php", { uid: this.user.id, bank: JSON.stringify(this.bank) }).subscribe((res: any) => {
+      if (res.msg === 'ok') {
+        this.inputBank = false;
+      } else {
+        alert(res.msg);
+      }
+    });
   }
 }

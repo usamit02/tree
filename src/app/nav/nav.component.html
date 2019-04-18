@@ -5,10 +5,10 @@
   </mat-sidenav>
   <mat-sidenav #drawerR position="end" id="sider" class="sidenav" fixedInViewport="true" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="!(isHandset$ | async)">
-    <app-member [user]="user" [room]="room"></app-member>
+    <app-member [user]="user" [room]="room" (hasmember)="onHasmember($event)"></app-member>
   </mat-sidenav>
   <mat-sidenav-content>
-    <mat-toolbar color="primary" [class.paid]="room.price" [class.logout]="!user.id" [class.save]="save">
+    <mat-toolbar color="primary" [ngStyle]="barColor">
       <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawerL.toggle()">
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>
@@ -34,9 +34,16 @@
       <button (click)="login('google')">google</button>
       <button style="display:none;" id="dummy" (click)="login('dummy')">dummy</button>
     </div>
-    <app-home [user]="user" [room]="room" [rooms]="rooms" [exec]="exec" (save)=saveCTL($event)></app-home>
+    <app-home [user]="user" [room]="room" [rooms]="rooms" [exec]="exec" [hasmember]="hasmember" (save)=saveCTL($event)></app-home>
     <p></p>
     <app-tiny2 *ngIf="room.story && room.auth>=500" [rid]="room.id" [exec]="exec" (save)=saveCTL($event)></app-tiny2>
     <span *ngIf="room.auth<500 || !room.story&&room.auth===500" style="color:gray;">※この部屋の編集権限がありません</span>
   </mat-sidenav-content>
 </mat-sidenav-container>
+
+<!--
+  <mat-toolbar color="primary" [class.paid]="room.price" [class.shut]="room.shut===100" [class.logout]="!user.id"
+      [class.save]="save">
+  
+
+-->

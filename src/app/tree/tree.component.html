@@ -18,8 +18,8 @@
       <input [ngModel]="node.data.na" autofocus (blur)="stopEdit()" (keyup.enter)="node.data.na=$event.target.value;saveEdit()"
         (keyup.esc)="stopEdit()" />
     </span>
-    <span *ngIf="node !== editNode" [class.paid]="node.data.price">{{ node.data.na }} <mat-icon *ngIf="node.data.plan>0">lock</mat-icon></span>
-
+    <span *ngIf="node !== editNode" [class.paid]="node.data.price" [class.shut]="node.data.shut===100">{{ node.data.na
+      }} <mat-icon *ngIf="node.data.plan>0">lock</mat-icon></span>
   </ng-template>
 </tree-root>
 

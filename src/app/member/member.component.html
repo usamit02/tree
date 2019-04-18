@@ -39,5 +39,6 @@
       <input type="number" [value]="contextMenu.node.data.rate">％
       <div><label></label><button (click)=rate()>～{{remainRate + contextMenu.node.data.rate}}％</button></div>
     </li>
+    <li *ngIf="contextMenu.node.data.id===1" (click)=banall(tree)>解散</li>
   </ul>
 </div>
