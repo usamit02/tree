@@ -26,14 +26,7 @@ import { NoticeComponent } from './notice/notice.component';
 import { CashComponent } from './cash/cash.component';
 import { BookComponent } from './book/book.component';
 import { StoryComponent } from './story/story.component';
-const firebaseConfig = {
-  apiKey: 'AIzaSyAvD0ftnENGOCvE9cOPB8AklV7JeMY4cfg',
-  authDomain: 'blogersguild1.firebaseapp.com',
-  databaseURL: 'https://blogersguild1.firebaseio.com',
-  projectId: 'blogersguild1',
-  storageBucket: 'blogersguild1.appspot.com',
-  messagingSenderId: '1091781872346'
-};
+import { firebaseConfig } from '../environments/environment';
 @NgModule({
   declarations: [
     AppComponent,
