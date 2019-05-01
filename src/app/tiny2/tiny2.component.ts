@@ -28,7 +28,7 @@ export class Tiny2Component implements OnInit {
     menubar: false,
     inline: true,
     //theme: 'inlite',
-    language_url: 'http://bloggersguild.cf/js/ja.js',
+    language_url: 'https://bloggersguild.cf/js/ja.js',
     plugins: [
       'autolink autosave codesample link lists advlist table paste contextmenu textcolor emoticons'
     ],
@@ -158,7 +158,7 @@ export class Tiny2Component implements OnInit {
       this.txts = []; this.medias = []; this.roomimg = "";
       for (let i = 0; i < storys.length; i++) {
         if (storys[i].media.indexOf('img') === 1) {
-          this.roomimg = storys[i].id;
+          this.roomimg = storys[i].id.toString();
           break;
         }
       }
