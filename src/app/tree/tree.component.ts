@@ -223,7 +223,7 @@ export class TreeComponent implements OnInit {
     for (let i = 0; i < rooms.length; i++) {
       dels.push(rooms[i].id);//sql += "DELETE FROM t01room WHERE id=" + rooms[i].id + ";\n";
     }
-    console.log(sql);
+    //console.log(sql);
     this.mysql.query("owner/room.php", {
       uid: this.user.id, sql: sql.substr(0, sql.length - 1), dels: JSON.stringify(dels)
     }).subscribe((data: any) => {

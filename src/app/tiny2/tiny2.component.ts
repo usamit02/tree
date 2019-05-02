@@ -408,10 +408,14 @@ export class Tiny2Component implements OnInit {
     });
     if (sql) {
       if (roomimg !== this.roomimg) {
-        sql += "UPDATE t01room,t21story SET t01room.img=t21story.media WHERE t01room.id=t21story.rid AND t01room.id="
-          + rid + " AND t21story.id=" + roomimg + ";;\r\n";
+        if (roomimg) {
+          sql += "UPDATE t01room,t21story SET t01room.img=t21story.media WHERE t01room.id=t21story.rid AND t01room.id="
+            + rid + " AND t21story.id=" + roomimg + ";;\r\n";
+        } else {
+          sql += "UPDATE t01room SET t01room.img=null WHERE t01room.id=" + rid + ";;\r\n";
+        }
       }
-      console.log(sql);
+      //console.log(sql);
       this.mysql.post("owner/story.php", { sql: sql.substr(0, sql.length - 1) }).subscribe((res: any) => {
         if (res.msg === "ok") {
           this.txts = []; this.medias = []; this.storyLength += newStoryLength; this.roomimg = roomimg;
