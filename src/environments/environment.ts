@@ -1,15 +1,14 @@
 export const environment = {
   production: false
 };
-export const UPURL = "https://bloggersguild.cf/";
+export const UPURL = "https://ss1.xrea.com/salonclife.s1008.xrea.com/";
 //export const UPURL = "http://localhost/public_html/";
 export const firebaseConfig = {
-  apiKey: 'AIzaSyB8s5OQAXCjki499Q-YpN5ip2LCejRX80o',
-  authDomain: 'salon-clife.firebaseapp.com',
-  databaseURL: 'https://salon-clife.firebaseio.com',
-  projectId: 'salon-clife',
-  storageBucket: 'salon-clife.appspot.com',
-  messagingSenderId: '1091781872346'
+  apiKey: 'AIzaSyD_iaPZ6c2PZ7SaRkfHnfsMy0ZeeIpfjGI',
+  authDomain: 'iroiroaruyo.firebaseapp.com',
+  databaseURL: 'https://iroiroaruyo.firebaseio.com',
+  projectId: 'iroiroaruyo-211307',
+  storageBucket: 'iroiroaruyo.appspot.com',
 };
 /*
 export const firebaseConfig = {
